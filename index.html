@@ -1,0 +1,2870 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="light dark" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<link rel="icon" href="data:," />
+<title>Atomic Boards — project board manager</title>
+<script>
+  /* Resolve the colour theme before first paint so there is no flash. */
+  (function(){
+    var KEY = "atomic-boards-theme", mode = null;
+    try{ mode = localStorage.getItem(KEY); }catch(e){}
+    if(mode !== "light" && mode !== "dark"){
+      mode = (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) ? "dark" : "light";
+    }
+    document.documentElement.setAttribute("data-theme", mode);
+  })();
+</script>
+<style>
+  :root{
+    color-scheme:light;
+    /* surfaces */
+    --canvas-top:#f9fbfd;
+    --canvas-bottom:#eff3f9;
+    --wash-a:rgba(11,98,214,.10);
+    --wash-b:rgba(14,165,160,.10);
+    --header-bg:rgba(255,255,255,.84);
+    --list-bg:#f7f9fc;
+    --card-bg:#ffffff;
+    --panel-bg:#ffffff;
+    --input-bg:#ffffff;
+    --chip-bg:#eef2f7;
+    /* text */
+    --ink:#101828;
+    --ink-2:#475467;
+    --ink-3:#5b6b7e;
+    --line:#e3e8ef;
+    /* accent */
+    --accent:#0b62d6;
+    --accent-deep:#0953b8;
+    --accent-ink:#ffffff;
+    /* status */
+    --danger:#c9372c;
+    --danger-bg:#fdeceb;
+    --danger-ink:#ffffff;
+    --warn:#a65300;
+    --warn-bg:#fff3e2;
+    --ok:#177a4c;
+    --ok-deep:#159a5c;
+    --ok-bg:#e4f5ec;
+    /* interaction */
+    --glass:rgba(16,24,40,.035);
+    --glass-strong:rgba(16,24,40,.075);
+    --glass-line:rgba(16,24,40,.12);
+    --hover:rgba(16,24,40,.05);
+    --scrim:rgba(16,24,40,.45);
+    --scroll:rgba(16,24,40,.18);
+    --scroll-hover:rgba(16,24,40,.34);
+    /* shadows */
+    --shadow:0 1px 2px rgba(16,24,40,.05),0 6px 18px rgba(16,24,40,.06);
+    --shadow-card:0 1px 2px rgba(16,24,40,.05),0 2px 8px rgba(16,24,40,.05);
+    --shadow-lift:0 6px 14px rgba(16,24,40,.09),0 18px 36px rgba(16,24,40,.11);
+    --shadow-lg:0 24px 56px rgba(16,24,40,.18),0 6px 18px rgba(16,24,40,.10);
+    --shadow-pop:0 4px 14px rgba(10,30,58,.10);
+    --focus:0 0 0 3px color-mix(in srgb, var(--accent) 30%, transparent);
+    /* text on a saturated fill, brand mark, toast */
+    --on-label:#ffffff;
+    --mark-a:#38bdf8;
+    --mark-b:#0b62d6;
+    --mark-c:#0a4a9e;
+    --mark-ink:#ffffff;
+    --mark-shadow:0 4px 12px rgba(11,98,214,.45),inset 0 1px 0 rgba(255,255,255,.35);
+    --toast-bg:#0d2138;
+    --toast-ink:#eaf2fb;
+    --ease:cubic-bezier(.22,.9,.28,1);
+  }
+  html[data-theme="dark"]{
+    color-scheme:dark;
+    --canvas-top:#0a0a0a;
+    --canvas-bottom:#000000;
+    --wash-a:rgba(255,255,255,.05);
+    --wash-b:rgba(255,255,255,.03);
+    --header-bg:rgba(8,8,8,.88);
+    --list-bg:#101010;
+    --card-bg:#171717;
+    --panel-bg:#0b0b0b;
+    --input-bg:#000000;
+    --chip-bg:#202020;
+    --ink:#f2f2f2;
+    --ink-2:#b3b3b3;
+    --ink-3:#9a9a9a;
+    --line:#2a2a2a;
+    --accent:#5b9dff;
+    --accent-deep:#8ab8ff;
+    --accent-ink:#0a0a0a;
+    --danger:#ff9d94;
+    --danger-bg:#3d2622;
+    --danger-ink:#2a1210;
+    --warn:#ffb26b;
+    --warn-bg:#3a2c1a;
+    --ok:#7fe0ab;
+    --ok-deep:#3fae74;
+    --ok-bg:#193427;
+    --glass:rgba(255,255,255,.055);
+    --glass-strong:rgba(255,255,255,.12);
+    --glass-line:rgba(255,255,255,.14);
+    --hover:rgba(255,255,255,.08);
+    --scrim:rgba(0,0,0,.78);
+    --scroll:rgba(255,255,255,.2);
+    --scroll-hover:rgba(255,255,255,.32);
+    --shadow:0 1px 2px rgba(0,0,0,.35),0 6px 18px rgba(0,0,0,.28);
+    --shadow-card:0 1px 2px rgba(0,0,0,.35),0 3px 10px rgba(0,0,0,.25);
+    --shadow-lift:0 6px 14px rgba(0,0,0,.4),0 18px 36px rgba(0,0,0,.45);
+    --shadow-lg:0 24px 60px rgba(0,0,0,.65),0 4px 16px rgba(0,0,0,.4);
+    --shadow-pop:0 4px 14px rgba(0,0,0,.35);
+    --on-label:#ffffff;
+    --mark-a:#4aa8ff;
+    --mark-b:#2b6fd0;
+    --mark-c:#17427a;
+    --mark-ink:#06121f;
+    --mark-shadow:0 4px 14px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.22);
+    --toast-bg:#1c1c1c;
+    --toast-ink:#f4f4f4;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    font-family:"Plus Jakarta Sans",ui-sans-serif,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    color:var(--ink);
+    background:
+      radial-gradient(1000px 460px at 10% -12%, var(--wash-a), transparent 62%),
+      radial-gradient(820px 440px at 92% -10%, var(--wash-b), transparent 60%),
+      linear-gradient(180deg,var(--canvas-top) 0%,var(--canvas-bottom) 100%);
+    background-attachment:fixed;
+    display:flex;flex-direction:column;
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+    transition:background-color .2s var(--ease),color .2s var(--ease);
+  }
+  button,[role="button"],select,input,textarea{font:inherit}
+  button{cursor:pointer}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+  ::selection{background:color-mix(in srgb, var(--accent) 30%, transparent)}
+
+  /* ---------- Header ---------- */
+  header.appbar{
+    background:var(--header-bg);
+    -webkit-backdrop-filter:blur(16px) saturate(1.4);
+    backdrop-filter:blur(16px) saturate(1.4);
+    border-bottom:1px solid var(--line);
+    color:var(--ink);
+    padding:10px 16px;
+    display:flex;flex-wrap:wrap;gap:10px;align-items:center;
+    position:sticky;top:0;z-index:40;
+  }
+  .brand{display:flex;align-items:center;gap:11px;margin-right:6px}
+  .brand .mark{
+    width:34px;height:34px;border-radius:9px;flex:none;
+    background:linear-gradient(145deg,var(--mark-a),var(--mark-b) 60%,var(--mark-c));
+    color:var(--mark-ink);display:grid;place-items:center;font-size:17px;
+    box-shadow:var(--mark-shadow);
+  }
+  .brand .name{font-weight:800;font-size:16px;letter-spacing:.1px;line-height:1.1}
+  .brand .sub{font-size:11px;color:var(--ink-2);line-height:1.25;font-weight:500}
+  .board-tabs{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+  .board-tab{
+    border:1px solid var(--glass-line);background:var(--glass);color:var(--ink-2);
+    padding:8px 13px;border-radius:999px;font-size:13.5px;font-weight:600;min-height:38px;
+    display:inline-flex;align-items:center;gap:7px;
+    transition:background .18s var(--ease),color .18s var(--ease),transform .18s var(--ease),box-shadow .18s var(--ease);
+  }
+  .board-tab:hover{background:var(--glass-strong);color:var(--ink);transform:translateY(-1px)}
+  .board-tab:active{transform:scale(.97)}
+  .board-tab.active{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);box-shadow:0 6px 16px color-mix(in srgb,var(--accent) 28%, transparent)}
+  .board-tab .cnt{font-size:11px;font-weight:800;background:var(--chip-bg);color:var(--ink-2);border-radius:999px;padding:1px 7px}
+  .board-tab.active .cnt{background:color-mix(in srgb, var(--accent-ink) 20%, transparent);color:var(--accent-ink)}
+  .btn-new-board{
+    border:1.5px dashed var(--glass-line);background:transparent;color:var(--ink-2);
+    padding:8px 13px;border-radius:999px;font-size:13.5px;font-weight:600;min-height:38px;
+    transition:background .18s var(--ease),color .18s var(--ease),border-color .18s var(--ease);
+  }
+  .btn-new-board:hover{background:var(--glass);color:var(--ink);border-color:color-mix(in srgb,var(--accent) 45%, transparent)}
+  .searchbox{margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .search-wrap{position:relative}
+  .search-wrap svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--ink-3);pointer-events:none}
+  #searchInput{
+    padding:9px 12px 9px 34px;border-radius:999px;border:1px solid var(--line);
+    background:var(--input-bg);color:var(--ink);min-height:38px;width:200px;font-size:14px;
+    transition:width .3s var(--ease),background .2s var(--ease),color .2s var(--ease),border-color .2s var(--ease);
+  }
+  #searchInput::placeholder{color:var(--ink-3)}
+  #searchInput:focus{outline:none;width:250px}
+  .btn-summary{
+    background:linear-gradient(180deg,var(--accent),var(--accent-deep));color:var(--accent-ink);border:none;font-weight:700;
+    padding:9px 15px;border-radius:999px;min-height:38px;font-size:13.5px;
+    display:inline-flex;align-items:center;gap:7px;
+    box-shadow:0 6px 16px color-mix(in srgb,var(--accent) 30%, transparent);
+    transition:transform .18s var(--ease),box-shadow .18s var(--ease),filter .18s var(--ease);
+  }
+  .btn-summary:hover{transform:translateY(-1px);filter:brightness(1.05);box-shadow:0 10px 24px color-mix(in srgb,var(--accent) 38%, transparent)}
+  .btn-summary:active{transform:scale(.97)}
+  .btn-theme{
+    width:38px;height:38px;flex:none;border-radius:999px;border:1px solid var(--line);
+    background:var(--card-bg);color:var(--ink-2);display:grid;place-items:center;
+    transition:background .18s var(--ease),color .18s var(--ease),border-color .18s var(--ease),transform .18s var(--ease);
+  }
+  .btn-theme:hover{background:var(--hover);color:var(--ink);border-color:color-mix(in srgb,var(--ink) 22%, transparent);transform:translateY(-1px)}
+  .btn-theme:active{transform:scale(.95)}
+  .btn-theme .ico-sun{display:none}
+  html[data-theme="dark"] .btn-theme .ico-sun{display:block}
+  html[data-theme="dark"] .btn-theme .ico-moon{display:none}
+
+  /* ---------- Board toolbar (on canvas) ---------- */
+  .toolbar{
+    display:flex;flex-wrap:wrap;gap:8px;align-items:center;
+    padding:16px 18px 4px;color:var(--ink);
+  }
+  .board-title{
+    font-size:22px;font-weight:800;margin:0;padding:5px 10px;border-radius:9px;cursor:text;
+    border:1.5px solid transparent;max-width:100%;letter-spacing:-.01em;color:var(--ink);
+    transition:background .18s var(--ease);
+  }
+  .board-title:hover{background:var(--glass)}
+  .board-title-input{
+    font-size:22px;font-weight:800;padding:4px 9px;border-radius:9px;letter-spacing:-.01em;
+    border:1.5px solid var(--accent);background:var(--input-bg);color:var(--ink);width:min(420px,80vw);
+    box-shadow:var(--shadow-pop);
+  }
+  .toolbar .spacer{flex:1}
+  .tbtn{
+    border:1px solid var(--line);background:var(--card-bg);color:var(--ink-2);
+    border-radius:999px;padding:7px 14px;font-size:13px;font-weight:600;min-height:36px;
+    display:inline-flex;align-items:center;gap:6px;
+    transition:background .18s var(--ease),color .18s var(--ease),border-color .18s var(--ease),transform .18s var(--ease);
+  }
+  .tbtn:hover{background:var(--hover);color:var(--ink);border-color:color-mix(in srgb,var(--ink) 20%, transparent)}
+  .tbtn:active{transform:scale(.96)}
+  .tbtn.danger{color:var(--danger);border-color:color-mix(in srgb,var(--danger) 40%, transparent)}
+  .tbtn.danger:hover{background:var(--danger-bg);color:var(--danger)}
+  .filter-row{display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:10px 18px 2px}
+  .filter-label{font-size:11px;font-weight:800;color:var(--ink-3);text-transform:uppercase;letter-spacing:.9px;margin-right:3px}
+  .fchip{
+    border:1.5px solid var(--line);background:var(--card-bg);color:var(--ink-2);
+    border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:600;min-height:32px;
+    display:inline-flex;align-items:center;gap:6px;
+    transition:all .18s var(--ease);
+  }
+  .fchip:hover{color:var(--ink);border-color:color-mix(in srgb,var(--accent) 45%, transparent)}
+  .fchip:active{transform:scale(.96)}
+  .fchip .dot{width:9px;height:9px;border-radius:50%;flex:none;box-shadow:0 0 0 2px var(--card-bg)}
+  .fchip .dot.danger{background:var(--danger)}
+  .fchip .dot.warn{background:var(--warn)}
+  .fchip.on{border-color:var(--accent);color:var(--accent-ink);background:var(--accent);box-shadow:0 4px 12px color-mix(in srgb,var(--accent) 30%, transparent)}
+  .match-note{font-size:12.5px;color:var(--ink-2);padding:4px 18px 0;font-weight:500}
+  .local-note{font-size:12px;color:var(--ink-3);padding:7px 18px 0;display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:0}
+  .local-note button{background:none;border:none;color:var(--accent);font-weight:700;font-size:12px;padding:4px 2px;min-height:28px;text-decoration:underline;text-underline-offset:3px}
+
+  /* ---------- Layout ---------- */
+  .layout{flex:1;display:flex;gap:0;align-items:stretch;min-height:0}
+  main.board-area{flex:1;min-width:0;display:flex;flex-direction:column}
+  .lists{
+    flex:1;display:flex;gap:14px;align-items:flex-start;
+    padding:14px 18px 22px;overflow-x:auto;overflow-y:hidden;
+    scrollbar-width:thin;scrollbar-color:var(--scroll) transparent;
+  }
+  .lists::-webkit-scrollbar{height:10px}
+  .lists::-webkit-scrollbar-thumb{background:var(--scroll);border-radius:5px;border:2px solid transparent;background-clip:content-box}
+  .lists::-webkit-scrollbar-thumb:hover{background:var(--scroll-hover);background-clip:content-box;border:2px solid transparent}
+  .list{
+    background:var(--list-bg);
+    -webkit-backdrop-filter:blur(14px) saturate(1.3);
+    backdrop-filter:blur(14px) saturate(1.3);
+    border:1px solid var(--line);
+    border-radius:16px;width:288px;flex:none;
+    max-height:100%;display:flex;flex-direction:column;box-shadow:var(--shadow);
+  }
+  .list-head{
+    display:flex;align-items:center;gap:6px;padding:12px 8px 6px 16px;
+  }
+  .list-title{font-size:13.5px;font-weight:800;letter-spacing:.02em;text-transform:uppercase;margin:0;flex:1;cursor:text;padding:4px 6px;border-radius:6px;word-break:break-word;color:var(--ink)}
+  .list-title:hover{background:var(--hover)}
+  .list-title-input{font-size:14px;font-weight:700;flex:1;padding:4px 6px;border-radius:6px;border:1.5px solid var(--accent);background:var(--input-bg);color:var(--ink);min-width:0}
+  .list-count{font-size:11.5px;font-weight:800;color:var(--ink-2);background:var(--chip-bg);border-radius:999px;padding:2px 9px}
+  .icon-btn{
+    border:none;background:transparent;color:var(--ink-3);border-radius:8px;
+    width:34px;height:34px;display:grid;place-items:center;flex:none;font-size:16px;
+    transition:background .15s var(--ease),color .15s var(--ease);
+  }
+  .icon-btn:hover{background:var(--hover);color:var(--ink)}
+  .cards{
+    padding:4px 10px 8px;overflow-y:auto;min-height:44px;
+    display:flex;flex-direction:column;gap:9px;
+    scrollbar-width:thin;scrollbar-color:var(--scroll) transparent;
+  }
+  .cards::-webkit-scrollbar{width:8px}
+  .cards::-webkit-scrollbar-thumb{background:var(--scroll-hover);border-radius:4px;border:2px solid transparent;background-clip:content-box}
+  .cards.drag-over{outline:2px dashed var(--accent);outline-offset:-5px;border-radius:10px;background:color-mix(in srgb, var(--accent) 8%, transparent)}
+  .empty-hint{font-size:12.5px;color:var(--ink-3);text-align:center;padding:12px 6px;border:1.5px dashed var(--line);border-radius:10px;line-height:1.5}
+  .drop-line{height:4px;border-radius:2px;background:var(--accent);flex:none;margin:-2px 0;box-shadow:0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent)}
+
+  /* ---------- Card ---------- */
+  .card{
+    background:var(--card-bg);border-radius:12px;box-shadow:var(--shadow-card);
+    padding:11px 12px 10px;cursor:grab;position:relative;border:1.5px solid transparent;
+    transition:transform .18s var(--ease),box-shadow .18s var(--ease),border-color .18s var(--ease);
+  }
+  .card:hover{border-color:color-mix(in srgb, var(--accent) 55%, transparent);transform:translateY(-2px);box-shadow:var(--shadow-lift)}
+  .card:active{cursor:grabbing}
+  .card.filtered-out{display:none}
+  .card .labels{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:7px}
+  .lbl{font-size:10px;font-weight:800;border-radius:999px;padding:3px 8px;color:var(--on-label);letter-spacing:.4px;text-transform:uppercase}
+  .card h4{margin:0 0 4px;font-size:14px;line-height:1.38;font-weight:700;padding-right:22px;letter-spacing:-.005em}
+  .card p{margin:0 0 8px;font-size:12.5px;line-height:1.5;color:var(--ink-2);
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .card-foot{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .due{font-size:11.5px;font-weight:700;border-radius:999px;padding:3px 9px;display:inline-flex;align-items:center;gap:4px;background:var(--chip-bg);color:var(--ink-2)}
+  .due.overdue{background:var(--danger-bg);color:var(--danger)}
+  .due.soon{background:var(--warn-bg);color:var(--warn)}
+  .due.done{background:var(--ok-bg);color:var(--ok)}
+  .avatar{
+    width:26px;height:26px;border-radius:50%;color:var(--on-label);font-size:10.5px;font-weight:800;
+    display:inline-grid;place-items:center;flex:none;
+    box-shadow:0 0 0 2px var(--card-bg),var(--shadow-card);
+  }
+  .who{font-size:12px;color:var(--ink-2);font-weight:600}
+  .unassigned{font-size:11.5px;color:var(--warn);font-weight:700}
+  .card .edit-btn{
+    position:absolute;top:7px;right:7px;width:30px;height:30px;border:none;border-radius:8px;
+    background:var(--chip-bg);color:var(--ink-2);display:grid;place-items:center;opacity:0;
+    transition:opacity .15s var(--ease),background .15s var(--ease);
+  }
+  .card:hover .edit-btn,.card:focus-within .edit-btn{opacity:1}
+  .card .edit-btn:hover{background:var(--line);color:var(--ink)}
+  @media (hover:none){.card .edit-btn{opacity:.8}}
+
+  /* ---------- Composer ---------- */
+  .composer{padding:6px 10px 11px}
+  .add-card-btn{
+    width:100%;text-align:left;border:none;background:transparent;color:var(--ink-2);
+    padding:9px 10px;border-radius:9px;font-size:13.5px;font-weight:600;min-height:38px;
+    transition:background .15s var(--ease),color .15s var(--ease);
+  }
+  .add-card-btn:hover{background:var(--hover);color:var(--ink)}
+  .composer textarea{
+    width:100%;border:1.5px solid var(--accent);border-radius:10px;padding:9px 10px;
+    background:var(--input-bg);color:var(--ink);resize:vertical;min-height:56px;font-size:14px;
+    box-shadow:var(--shadow-pop);
+  }
+  .composer .row{display:flex;gap:7px;margin-top:7px}
+  .btn-primary{
+    background:linear-gradient(180deg,var(--accent),var(--accent-deep));color:var(--accent-ink);border:none;border-radius:9px;
+    padding:8px 16px;font-weight:700;min-height:38px;font-size:13.5px;
+    box-shadow:0 3px 10px color-mix(in srgb, var(--accent) 35%, transparent);
+    transition:transform .15s var(--ease),box-shadow .15s var(--ease),filter .15s var(--ease);
+  }
+  .btn-primary:hover{filter:brightness(1.07);transform:translateY(-1px)}
+  .btn-primary:active{transform:scale(.97)}
+  .btn-ghost{
+    background:transparent;border:1px solid var(--line);color:var(--ink);border-radius:9px;
+    padding:8px 14px;font-weight:600;min-height:38px;font-size:13.5px;
+    transition:background .15s var(--ease),transform .15s var(--ease);
+  }
+  .btn-ghost:hover{background:var(--hover)}
+  .btn-ghost:active{transform:scale(.97)}
+  .btn-danger{
+    background:var(--danger);color:var(--danger-ink);border:none;border-radius:9px;padding:8px 16px;font-weight:700;min-height:38px;font-size:13.5px;
+    transition:filter .15s var(--ease),transform .15s var(--ease);
+  }
+  .btn-danger:hover{filter:brightness(1.08)}
+  .btn-danger:active{transform:scale(.97)}
+  .add-list{
+    flex:none;width:288px;background:var(--glass);border:1.5px dashed var(--glass-line);
+    border-radius:16px;padding:14px;font-weight:700;color:var(--ink-3);font-size:14px;min-height:52px;text-align:left;
+    transition:background .18s var(--ease),border-color .18s var(--ease),color .18s var(--ease);
+  }
+  .add-list:hover{background:var(--glass-strong);border-color:color-mix(in srgb,var(--accent) 45%, transparent);color:var(--ink)}
+  .add-list-form{flex:none;width:288px;background:var(--list-bg);border-radius:16px;padding:12px;box-shadow:var(--shadow)}
+  .add-list-form input{width:100%;padding:9px 10px;border-radius:9px;border:1.5px solid var(--accent);background:var(--input-bg);color:var(--ink);font-size:14px;margin-bottom:8px}
+
+  /* ---------- Entrance motion (full renders only) ---------- */
+  @keyframes listIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes cardIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+  .lists.enter .list{animation:listIn .55s var(--ease) both}
+  .lists.enter .list:nth-child(2){animation-delay:.06s}
+  .lists.enter .list:nth-child(3){animation-delay:.12s}
+  .lists.enter .list:nth-child(4){animation-delay:.18s}
+  .lists.enter .list:nth-child(5){animation-delay:.24s}
+  .lists.enter .list:nth-child(n+6){animation-delay:.3s}
+  .lists.enter .card{animation:cardIn .45s var(--ease) both}
+  .lists.enter .card:nth-child(2){animation-delay:.05s}
+  .lists.enter .card:nth-child(3){animation-delay:.09s}
+  .lists.enter .card:nth-child(4){animation-delay:.13s}
+  .lists.enter .card:nth-child(5){animation-delay:.17s}
+  .lists.enter .card:nth-child(n+6){animation-delay:.21s}
+
+  /* ---------- Summary panel ---------- */
+  aside.summary{
+    width:336px;flex:none;background:var(--panel-bg);border-left:1px solid var(--line);
+    overflow-y:auto;padding:18px 18px 26px;
+    box-shadow:-12px 0 32px color-mix(in srgb,var(--scrim) 22%, transparent);
+    scrollbar-width:thin;
+  }
+  aside.summary.hidden{display:none}
+  .summary h2{margin:0 0 2px;font-size:16.5px;font-weight:800;display:flex;align-items:center;gap:8px;letter-spacing:-.01em}
+  .summary .sub{font-size:12px;color:var(--ink-3);margin:0 0 14px;line-height:1.45}
+  .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+  .stat{background:var(--list-bg);border:1px solid var(--line);border-radius:12px;padding:11px 13px}
+  .stat .n{font-size:23px;font-weight:800;line-height:1.1;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+  .stat .l{font-size:11px;font-weight:700;color:var(--ink-3);text-transform:uppercase;letter-spacing:.6px;margin-top:2px}
+  .stat.red .n{color:var(--danger)} .stat.amber .n{color:var(--warn)} .stat.green .n{color:var(--ok)}
+  .next-action{
+    border:1.5px solid color-mix(in srgb, var(--accent) 55%, transparent);border-radius:14px;padding:13px 14px;margin-bottom:16px;
+    background:linear-gradient(160deg, color-mix(in srgb, var(--accent) 10%, var(--panel-bg)), color-mix(in srgb, var(--accent) 4%, var(--panel-bg)));
+  }
+  .next-action .k{font-size:11px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:var(--accent);margin-bottom:5px}
+  .next-action p{margin:0;font-size:13.5px;line-height:1.55}
+  .next-action button{margin-top:10px}
+  .summary h3{font-size:11.5px;text-transform:uppercase;letter-spacing:.8px;color:var(--ink-3);margin:18px 0 9px;font-weight:800}
+  .bar-row{display:flex;align-items:center;gap:8px;font-size:12.5px;margin-bottom:7px}
+  .bar-row .nm{width:88px;flex:none;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .bar-track{flex:1;height:8px;border-radius:4px;background:var(--chip-bg);overflow:hidden}
+  .bar-fill{display:block;height:100%;background:linear-gradient(90deg,var(--accent-deep),var(--accent));border-radius:4px;transition:width .6s var(--ease)}
+  .bar-row .ct{width:22px;text-align:right;font-weight:700;color:var(--ink-2);font-variant-numeric:tabular-nums}
+  .attn{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:7px}
+  .attn li{
+    display:flex;gap:8px;align-items:flex-start;width:100%;text-align:left;
+    background:var(--list-bg);border:1px solid var(--line);border-radius:10px;padding:9px 11px;font-size:13px;
+    transition:border-color .15s var(--ease),transform .15s var(--ease),box-shadow .15s var(--ease);
+  }
+  .attn li:hover{border-color:var(--accent);transform:translateX(2px);box-shadow:var(--shadow-card)}
+  .attn .t{font-weight:600;line-height:1.35}
+  .attn .m{font-size:11.5px;color:var(--ink-3)}
+  .attn .tag{font-size:10px;font-weight:800;border-radius:999px;padding:2.5px 7px;flex:none;margin-top:1px;letter-spacing:.3px}
+  .tag.overdue{background:var(--danger-bg);color:var(--danger)}
+  .tag.soon{background:var(--warn-bg);color:var(--warn)}
+  .tag.unassigned{background:var(--chip-bg);color:var(--ink-2)}
+  .none-note{font-size:13px;color:var(--ink-3);line-height:1.5}
+  .progress-wrap{margin-bottom:4px}
+  .progress-track{height:10px;border-radius:5px;background:var(--chip-bg);overflow:hidden}
+  .progress-fill{height:100%;background:linear-gradient(90deg,var(--ok-deep),var(--ok));border-radius:5px;transition:width .6s var(--ease)}
+  .progress-lbl{font-size:12px;color:var(--ink-2);margin-top:6px;line-height:1.5}
+
+  /* ---------- Modals & menus ---------- */
+  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+  @keyframes popIn{from{opacity:0;transform:translateY(14px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+  @keyframes menuIn{from{opacity:0;transform:translateY(-4px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+  .overlay{
+    position:fixed;inset:0;background:var(--scrim);z-index:60;
+    -webkit-backdrop-filter:blur(5px);backdrop-filter:blur(5px);
+    display:none;align-items:flex-start;justify-content:center;padding:22px 12px;overflow-y:auto;
+  }
+  .overlay.open{display:flex;animation:fadeIn .2s var(--ease)}
+  .overlay.open .modal{animation:popIn .3s var(--ease)}
+  .modal{
+    background:var(--panel-bg);border-radius:18px;box-shadow:var(--shadow-lg);
+    width:min(560px,100%);padding:22px;color:var(--ink);
+    border:1px solid var(--line);
+  }
+  .modal h2{margin:0 0 15px;font-size:17.5px;font-weight:800;letter-spacing:-.01em}
+  .field{margin-bottom:13px}
+  .field label{display:block;font-size:11.5px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--ink-3);margin-bottom:6px}
+  .field input,.field textarea,.field select{
+    width:100%;padding:10px 12px;border-radius:10px;border:1.5px solid var(--line);
+    background:var(--input-bg);color:var(--ink);font-size:14px;min-height:42px;
+    transition:border-color .15s var(--ease),box-shadow .15s var(--ease);
+  }
+  .field input:focus,.field textarea:focus,.field select:focus{
+    border-color:var(--accent);outline:none;box-shadow:0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent);
+  }
+  .field textarea{min-height:84px;resize:vertical}
+  .field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .modal .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:17px;align-items:center}
+  .modal .actions .spacer{flex:1}
+  .swatches{display:flex;gap:7px;flex-wrap:wrap}
+  .swatch{width:38px;height:38px;border-radius:10px;border:3px solid transparent;position:relative;transition:transform .15s var(--ease),border-color .15s var(--ease)}
+  .swatch:hover{transform:scale(1.08)}
+  .swatch.on{border-color:var(--ink);transform:scale(1.05)}
+  .swatch.none{background:var(--chip-bg);color:var(--ink-3);font-size:11px;font-weight:700;display:grid;place-items:center;width:auto;padding:0 12px}
+  .menu-pop{
+    position:absolute;z-index:70;background:var(--panel-bg);border:1px solid var(--line);
+    border-radius:12px;box-shadow:var(--shadow-lg);padding:6px;min-width:200px;display:none;
+  }
+  .menu-pop.open{display:block;animation:menuIn .16s var(--ease);transform-origin:top right}
+  .menu-pop button{display:flex;width:100%;text-align:left;background:none;border:none;padding:10px 11px;border-radius:8px;font-size:13.5px;color:var(--ink);min-height:38px;align-items:center;transition:background .12s var(--ease)}
+  .menu-pop button:hover{background:var(--hover)}
+  .menu-pop button.danger{color:var(--danger)}
+  .toast{
+    position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(16px) scale(.97);
+    background:var(--toast-bg);color:var(--toast-ink);padding:12px 20px;border-radius:999px;
+    font-size:13.5px;font-weight:600;opacity:0;pointer-events:none;z-index:90;max-width:90vw;text-align:center;
+    box-shadow:0 14px 34px color-mix(in srgb, var(--toast-bg) 55%, transparent);
+    border:1px solid color-mix(in srgb, var(--toast-ink) 18%, transparent);
+    transition:opacity .25s var(--ease),transform .25s var(--ease);
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}
+
+  @media (max-width:860px){
+    aside.summary{position:fixed;inset:auto 0 0 0;width:100%;max-height:74vh;z-index:50;border-left:none;border-top:1px solid var(--line);border-radius:20px 20px 0 0;box-shadow:var(--shadow-lg)}
+    .searchbox{margin-left:0;width:100%}
+    #searchInput{flex:1;width:auto}
+    #searchInput:focus{width:auto}
+    .lists{flex-direction:column;overflow-x:visible;overflow-y:visible;padding:14px 12px 26px}
+    .list{width:100%;max-height:none}
+    .cards{overflow:visible}
+    .add-list,.add-list-form{width:100%}
+    .field-row{grid-template-columns:1fr}
+    .toolbar{padding:14px 12px 2px}
+    .filter-row,.match-note,.local-note{padding-left:12px;padding-right:12px}
+  }
+  @media (prefers-reduced-motion: reduce){
+    *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important}
+    .card:hover,.board-tab:hover,.btn-summary:hover,.btn-primary:hover{transform:none}
+  }
+
+
+
+
+
+/* =========================================================
+   v2 additions — appended after the original stylesheet
+   ========================================================= */
+
+
+/* ---------- Header bits ---------- */
+.board-tab.drop-target{
+  background:var(--accent);color:var(--accent-ink);border-color:var(--accent);
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 30%, transparent),var(--shadow-pop);
+  transform:translateY(-1px);
+}
+.kbd{
+  display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 5px;
+  font-size:11px;font-weight:800;font-family:inherit;line-height:1;
+  border-radius:5px;border:1px solid var(--line);background:var(--chip-bg);color:var(--ink-2);
+}
+.local-note .shortcuts{display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap;margin-left:2px}
+
+/* ---------- Toolbar ---------- */
+.tbtn .pill{
+  font-size:11px;font-weight:800;line-height:1;padding:3px 7px;border-radius:999px;
+  background:var(--chip-bg);color:var(--ink-2);font-variant-numeric:tabular-nums;
+}
+.tbtn.icon{padding:7px 11px;font-size:15px;letter-spacing:.06em}
+.tbtn[aria-expanded="true"]{background:color-mix(in srgb,var(--accent) 10%, var(--card-bg));border-color:color-mix(in srgb,var(--accent) 40%, transparent);color:var(--ink)}
+
+/* ---------- Menus ---------- */
+.menu-pop{position:fixed;min-width:224px;max-width:min(280px,calc(100vw - 16px));max-height:70vh;overflow-y:auto}
+.menu-pop .menu-sep{height:1px;background:var(--line);margin:5px 4px}
+.menu-pop button .ico{width:18px;flex:none;text-align:center;opacity:.75}
+.menu-pop button.danger .ico{opacity:1}
+
+/* ---------- Cards ---------- */
+@media (hover:hover){ .card{cursor:grab} }
+.card:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.card .labels{margin-top:0}
+.card h4{padding-right:26px}
+.card-foot{gap:6px;row-gap:6px}
+.card .person{display:inline-flex;align-items:center;gap:6px;margin-left:auto;min-width:0}
+.card .person .who{max-width:96px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.card .unassigned{margin-left:auto;white-space:nowrap}
+
+.ck-chip{
+  display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;
+  color:var(--ink-2);background:var(--chip-bg);border-radius:999px;padding:3px 9px 3px 7px;
+  font-variant-numeric:tabular-nums;
+}
+.ck-chip .ck-bar{width:34px;height:4px;border-radius:2px;background:color-mix(in srgb,var(--ink-3) 30%, transparent);overflow:hidden;flex:none}
+.ck-chip .ck-bar i{display:block;height:100%;background:var(--ok);border-radius:2px}
+.ck-chip.complete{color:var(--ok);background:var(--ok-bg)}
+.ck-chip.complete .ck-bar i{background:var(--ok)}
+
+/* Dragging */
+.card.dragging{opacity:.28;transform:none;box-shadow:none;border-style:dashed;border-color:var(--line)}
+.list.drop-target{
+  box-shadow:0 0 0 2px var(--accent),0 18px 38px color-mix(in srgb,var(--scrim) 35%, transparent);
+  border-color:color-mix(in srgb,var(--accent) 55%, transparent);
+}
+
+@keyframes landPulse{
+  0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--accent) 55%, transparent)}
+  100%{box-shadow:0 0 0 12px transparent}
+}
+.card.just-landed{animation:landPulse .6s var(--ease)}
+
+/* ---------- Empty states ---------- */
+.empty-hint{
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  font-size:12.5px;color:var(--ink-3);text-align:center;padding:14px 10px;
+  border:1.5px dashed var(--line);border-radius:11px;line-height:1.45;
+}
+.empty-hint strong{font-size:12.5px;color:var(--ink-2);font-weight:800}
+.empty-hint .link-btn{
+  margin-top:5px;border:none;background:none;color:var(--accent);font-weight:800;
+  font-size:12.5px;padding:4px 6px;border-radius:6px;
+}
+.empty-hint .link-btn:hover{background:color-mix(in srgb,var(--accent) 12%, transparent)}
+.empty-panel{
+  flex:none;width:min(440px,100%);align-self:center;margin:12px auto;
+  background:var(--list-bg);border:1px solid var(--line);border-radius:18px;
+  box-shadow:var(--shadow);padding:26px 24px;text-align:center;
+}
+.empty-panel .glyph{
+  width:46px;height:46px;border-radius:14px;margin:0 auto 12px;display:grid;place-items:center;
+  background:color-mix(in srgb,var(--accent) 14%, transparent);color:var(--accent);font-size:22px;
+}
+.empty-panel h2{margin:0 0 6px;font-size:16px;font-weight:800;letter-spacing:-.01em;color:var(--ink)}
+.empty-panel p{margin:0 auto 14px;font-size:13px;line-height:1.55;color:var(--ink-2);max-width:36ch}
+.empty-panel .panel-actions{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.empty-panel .add-list-form{width:100%;text-align:left;box-shadow:none;background:transparent;padding:0}
+.empty-panel .tmpl-row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:12px}
+.empty-panel .tmpl-row .btn-ghost{font-size:12.5px}
+
+/* ---------- Generic link button ---------- */
+.link-btn{
+  border:none;background:none;color:var(--accent);font-weight:800;font-size:12.5px;
+  padding:4px 6px;border-radius:6px;font-family:inherit;
+}
+.link-btn:hover{background:color-mix(in srgb,var(--accent) 12%, transparent)}
+
+/* ---------- Modals (scrollable, phone-friendly) ---------- */
+.overlay{align-items:flex-start;padding:24px 12px}
+.modal{
+  max-height:calc(100dvh - 48px);overflow-y:auto;overscroll-behavior:contain;
+  scrollbar-width:thin;
+}
+.modal h2{padding-right:6px}
+.modal .modal-sub{font-size:12.5px;color:var(--ink-3);line-height:1.5;margin:-8px 0 14px}
+.field-hint{font-size:12px;color:var(--ink-3);line-height:1.5;margin:-2px 0 8px}
+.field select{appearance:auto}
+.field-error{font-size:12px;color:var(--danger);font-weight:700;margin-top:5px}
+.field-error:empty{display:none}
+
+/* ---------- Checklist editor ---------- */
+.ck-editor{border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--list-bg)}
+.ck-progress{display:flex;align-items:center;gap:9px;margin-bottom:9px}
+.ck-progress .ck-bar{flex:1;height:7px;border-radius:4px;background:var(--chip-bg);overflow:hidden}
+  .ck-progress .ck-bar i{display:block;height:100%;background:linear-gradient(90deg,var(--ok-deep),var(--ok));border-radius:4px;transition:width .3s var(--ease)}
+.ck-progress .ck-count{font-size:11.5px;font-weight:800;color:var(--ink-2);font-variant-numeric:tabular-nums;min-width:30px;text-align:right}
+.ck-list{list-style:none;margin:0 0 8px;padding:0;display:flex;flex-direction:column;gap:2px;max-height:190px;overflow-y:auto}
+.ck-item{display:flex;align-items:center;gap:6px;border-radius:8px;padding:3px 4px}
+.ck-item:hover{background:var(--hover)}
+.ck-item label{display:flex;align-items:center;gap:8px;flex:1;min-width:0;font-size:13px;line-height:1.4;cursor:pointer;padding:4px 2px}
+.ck-item input[type="checkbox"]{width:16px;height:16px;flex:none;accent-color:var(--accent);cursor:pointer;margin:0}
+.ck-item .ck-text{overflow-wrap:anywhere}
+.ck-item.done .ck-text{color:var(--ink-3);text-decoration:line-through}
+.ck-del{
+  border:none;background:none;color:var(--ink-3);width:26px;height:26px;border-radius:7px;
+  display:grid;place-items:center;font-size:15px;line-height:1;flex:none;
+}
+.ck-del:hover{background:var(--danger-bg);color:var(--danger)}
+.ck-add{display:flex;gap:7px}
+.ck-add input{
+  flex:1;min-width:0;padding:8px 10px;border-radius:9px;border:1px solid var(--line);
+  background:var(--input-bg);color:var(--ink);font-size:13px;min-height:38px;
+}
+.ck-add input:focus{border-color:var(--accent);outline:none;box-shadow:var(--focus)}
+.ck-add .btn-ghost{padding:8px 12px;min-height:38px;font-size:13px}
+
+/* ---------- Archive + activity lists ---------- */
+.list-scroll{display:flex;flex-direction:column;gap:8px;max-height:52vh;overflow-y:auto;padding-right:2px}
+.archive-item,.act-item{
+  display:flex;gap:11px;align-items:flex-start;border:1px solid var(--line);border-radius:12px;
+  padding:11px 12px;background:var(--list-bg);
+}
+.archive-item .body,.act-item .body{flex:1;min-width:0}
+.archive-item .t{font-size:13.5px;font-weight:700;line-height:1.35;overflow-wrap:anywhere}
+.archive-item .m,.act-item .m{font-size:11.5px;color:var(--ink-3);margin-top:2px;line-height:1.4}
+.archive-item .row-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.archive-item .row-actions button{min-height:32px;padding:5px 11px;font-size:12.5px}
+.act-item .ico{
+  width:30px;height:30px;border-radius:9px;flex:none;display:grid;place-items:center;
+  background:var(--chip-bg);color:var(--ink-2);font-size:14px;
+}
+.act-item .t{font-size:13px;line-height:1.45;overflow-wrap:anywhere}
+.act-item .when{font-size:11px;color:var(--ink-3);margin-top:3px;display:flex;gap:6px;flex-wrap:wrap}
+.act-item[data-type="create"] .ico{background:var(--ok-bg);color:var(--ok)}
+.act-item[data-type="move"] .ico{background:color-mix(in srgb,var(--accent) 14%, transparent);color:var(--accent)}
+.act-item[data-type="archive"] .ico{background:var(--warn-bg);color:var(--warn)}
+.act-item[data-type="delete"] .ico{background:var(--danger-bg);color:var(--danger)}
+
+/* ---------- Toast with undo ---------- */
+.toast{
+  display:flex;align-items:center;gap:12px;border-radius:14px;padding:11px 14px 11px 18px;
+  text-align:left;max-width:min(520px,92vw);
+}
+.toast .toast-undo{
+  border:1px solid color-mix(in srgb, var(--toast-ink) 30%, transparent);
+  background:color-mix(in srgb, var(--toast-ink) 14%, transparent);color:var(--toast-ink);
+  border-radius:999px;padding:6px 13px;font-size:12.5px;font-weight:800;min-height:32px;flex:none;
+}
+.toast .toast-undo:hover{background:color-mix(in srgb, var(--toast-ink) 24%, transparent)}
+.toast.has-undo{padding-right:10px}
+
+/* ---------- Summary close (mobile) ---------- */
+.summary-close{display:none}
+@media (max-width:860px){
+  .summary-close{display:grid;position:absolute;top:10px;right:10px}
+  aside.summary{padding-top:16px}
+}
+
+/* ---------- Responsive overrides (keep horizontal board scroll) ---------- */
+@media (max-width:860px){
+  body{height:auto;min-height:100%}
+  header.appbar{padding:8px 12px;gap:8px}
+  .brand{margin-right:0}
+  .brand .sub{display:none}
+  .board-tabs{order:3;width:100%;flex-wrap:nowrap;overflow-x:auto;padding:2px 0 3px;scrollbar-width:none}
+  .board-tabs::-webkit-scrollbar{display:none}
+  .board-tab{flex:none}
+  .searchbox{margin-left:0;width:100%;order:4;gap:7px;justify-content:flex-end}
+  #searchInput{flex:1;width:auto;min-width:0;font-size:16px}
+  #searchInput:focus{width:auto}
+  .btn-summary{flex:none;font-size:13px;padding:9px 12px}
+  .layout{display:block}
+  main.board-area{min-height:0}
+  .toolbar{padding:12px 12px 2px;gap:6px}
+  .board-title{font-size:19px;padding:4px 8px}
+  .filter-row,.match-note,.local-note{padding-left:12px;padding-right:12px}
+  .filter-row{padding-top:8px;gap:5px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+  .filter-row::-webkit-scrollbar{display:none}
+  .filter-row .fchip{flex:none}
+  .lists{
+    flex-direction:row;flex-wrap:nowrap;align-items:flex-start;
+    overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;
+    scroll-snap-type:x proximity;gap:12px;padding:12px 12px 26px;min-height:0;
+  }
+  .list{
+    width:min(84vw,320px);flex:none;scroll-snap-align:start;
+    max-height:min(64vh,620px);
+  }
+  .add-list,.add-list-form{width:min(84vw,320px);flex:none;align-self:flex-start}
+  .empty-panel{width:min(88vw,440px);margin:10px auto;padding:22px 18px}
+  .modal{width:100%;padding:18px;border-radius:16px;max-height:calc(100dvh - 24px)}
+  .overlay{padding:12px 10px}
+  .modal .actions{bottom:-18px}
+  .field-row{grid-template-columns:1fr}
+  .list-scroll{max-height:56vh}
+  .toast{left:12px;right:12px;transform:translateY(16px);max-width:none;border-radius:14px}
+  .toast.show{transform:translateY(0)}
+}
+@media (max-width:520px){
+  .brand .mark{width:30px;height:30px;font-size:15px}
+  .brand .name{font-size:15px}
+  /* Search keeps the full row so the summary/theme buttons wrap below it as a
+     right-aligned pair instead of leaving a ragged gap on the left. */
+  .search-wrap{flex:1 1 100%;min-width:0}
+  #searchInput{width:100%}
+  .btn-new-board,.board-tab{padding:7px 11px;font-size:12.5px;min-height:34px}
+  /* Title owns its row so the three toolbar actions stay together instead of
+     leaving the board menu (⋯) orphaned on a line of its own. */
+  .toolbar .board-title{flex:1 1 100%;font-size:18px}
+  .toolbar .tbtn{padding:7px 11px;font-size:12.5px;min-height:34px}
+  .toolbar .tbtn .long{display:none}
+  .modal .actions{gap:6px}
+  .modal .actions .btn-primary,.modal .actions .btn-ghost,.modal .actions .btn-danger{padding:8px 12px;font-size:13px}
+  .archive-item{flex-wrap:wrap}
+}
+@media (prefers-reduced-motion: reduce){
+  .card.just-landed{animation:none}
+}
+
+body.modal-open{overflow:hidden}
+aside.summary{position:relative}
+#searchInput:focus{background:var(--input-bg);color:var(--ink);box-shadow:var(--focus)}
+#searchInput:focus::placeholder{color:var(--ink-3)}
+#searchInput:focus-visible{outline:none}
+
+
+/* ---------- Modal layout: pinned footer + scrollable body ---------- */
+.modal{display:flex;flex-direction:column;overflow:hidden}
+.modal > h2{flex:none}
+.modal-scroll{overflow-y:auto;min-height:0;flex:1 1 auto;padding-right:4px;scrollbar-width:thin}
+.modal .actions{position:static;flex:none;bottom:auto;margin-top:14px;padding:12px 0 0;border-top:1px solid var(--line);background:transparent}
+.field .ck-item label{text-transform:none;letter-spacing:0;font-weight:500;font-size:13px;color:var(--ink);margin:0}
+.field .ck-item label:hover{color:var(--ink)}
+#archiveBody .list-scroll,#activityBody .list-scroll{max-height:none}
+
+/* ---------- Small layout helpers (were inline styles in the script) ---------- */
+.form-row{display:flex;gap:7px}
+.empty-hint.tall{padding:20px}
+.field-hint.tight{margin:0 0 8px}
+.confirm-text{margin:0;font-size:14px;line-height:1.55;color:var(--ink-2)}
+.attn-link{
+  all:unset;display:flex;gap:8px;align-items:flex-start;width:100%;cursor:pointer;
+  font-size:13px;color:var(--ink);line-height:1.35;
+}
+.attn-link:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:8px}
+
+</style>
+</head>
+<body>
+
+<header class="appbar">
+  <div class="brand">
+    <div class="mark" aria-hidden="true">▦</div>
+    <div>
+      <div class="name">Atomic Boards</div>
+      <div class="sub">Boards, lists and cards — saved here</div>
+    </div>
+  </div>
+  <nav class="board-tabs" id="boardTabs" aria-label="Boards"></nav>
+  <button class="btn-new-board" id="newBoardBtn" type="button">+ New board</button>
+  <div class="searchbox">
+    <div class="search-wrap">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      <input id="searchInput" type="search" placeholder="Search cards…" aria-label="Search cards" />
+    </div>
+    <button class="btn-summary" id="summaryToggle" type="button" aria-expanded="true">✦ Board summary</button>
+    <button class="btn-theme" id="themeToggle" type="button" aria-pressed="false" aria-label="Switch to dark theme" title="Switch to dark theme">
+      <svg class="ico-moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>
+      <svg class="ico-sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+    </button>
+  </div>
+</header>
+
+<div class="layout">
+  <main class="board-area">
+    <div class="toolbar">
+      <h1 class="board-title" id="boardTitle" title="Click to rename" tabindex="0"></h1>
+      <span class="spacer"></span>
+      <button class="tbtn" id="addListBtn" type="button">+ Add list</button>
+      <button class="tbtn" id="archiveBtn" type="button" aria-haspopup="dialog" aria-label="Archived cards">▣<span class="long">Archive</span><span class="pill" id="archiveCount">0</span></button>
+      <button class="tbtn icon" id="boardMenuBtn" type="button" aria-haspopup="menu" aria-label="Board menu" title="Board menu">⋯</button>
+    </div>
+    <div class="filter-row" id="filterRow" aria-label="Filter cards"></div>
+    <div class="match-note" id="matchNote" hidden></div>
+    <p class="local-note">
+      <span id="boardMeta"></span>
+      <span class="shortcuts" aria-label="Keyboard shortcuts"><span class="kbd">N</span> new card <span class="kbd">/</span> search <span class="kbd">Esc</span> close</span>
+      <button type="button" id="resetBtn">Reset demo data</button>
+    </p>
+    <div class="lists" id="lists"></div>
+  </main>
+
+  <aside class="summary" id="summaryPanel" aria-label="Board summary">
+    <h2>✦ Board summary</h2>
+    <button class="icon-btn summary-close" id="summaryClose" type="button" aria-label="Close summary panel">✕</button>
+    <p class="sub">Generated on this device from your live board — no API key, no cost. Updates as you edit.</p>
+    <div id="summaryBody"></div>
+  </aside>
+</div>
+
+<!-- Card editor modal -->
+<div class="overlay" id="cardOverlay">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="cardModalTitle">
+    <h2 id="cardModalTitle">Edit card</h2>
+    <div class="modal-scroll">
+    <div class="field">
+      <label for="fTitle">Title</label>
+      <input id="fTitle" type="text" aria-describedby="cardFormError" />
+      <p class="field-error" id="cardFormError" role="alert"></p>
+    </div>
+    <div class="field">
+      <label for="fDesc">Description</label>
+      <textarea id="fDesc"></textarea>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label for="fDue">Due date</label>
+        <input id="fDue" type="date" />
+      </div>
+      <div class="field">
+        <label for="fAssignee">Assignee</label>
+        <input id="fAssignee" type="text" list="peopleList" placeholder="Start typing a name…" autocomplete="off" />
+        <datalist id="peopleList"></datalist>
+      </div>
+    </div>
+    <div class="field">
+      <label>Labels</label>
+      <div class="swatches" id="fLabels"></div>
+    </div>
+    <div class="field">
+      <label>Checklist</label>
+      <div class="ck-editor" id="fChecklist"></div>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label for="fBoard">Board (move card)</label>
+        <select id="fBoard"></select>
+      </div>
+      <div class="field">
+        <label for="fList">List</label>
+        <select id="fList"></select>
+      </div>
+    </div>
+    </div>
+    <div class="actions">
+      <button class="btn-ghost" id="cardArchiveBtn" type="button">Archive</button>
+      <button class="btn-danger" id="cardDeleteBtn" type="button">Delete card</button>
+      <span class="spacer"></span>
+      <button class="btn-ghost" id="cardCancelBtn" type="button">Cancel</button>
+      <button class="btn-primary" id="cardSaveBtn" type="button">Save changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- Board modal -->
+<div class="overlay" id="boardOverlay">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="boardModalTitle">
+    <h2 id="boardModalTitle">New board</h2>
+    <div class="field">
+      <label for="fBoardName">Board name</label>
+      <input id="fBoardName" type="text" placeholder="e.g. Website Redesign" autocomplete="off" />
+    </div>
+    <div class="field" id="boardTemplateField">
+      <label for="fBoardTemplate">Start from</label>
+      <select id="fBoardTemplate">
+        <option value="blank">Blank board (To Do, Doing, Done)</option>
+        <option value="launch">Product launch template</option>
+        <option value="study">Study plan template</option>
+      </select>
+      <div class="field-hint">Templates add ready-made lists, cards and checklists — everything stays editable.</div>
+    </div>
+    <div class="actions">
+      <span class="spacer"></span>
+      <button class="btn-ghost" id="boardCancelBtn" type="button">Cancel</button>
+      <button class="btn-primary" id="boardSaveBtn" type="button">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm modal -->
+<div class="overlay" id="confirmOverlay">
+  <div class="modal" role="alertdialog" aria-modal="true" aria-labelledby="confirmTitle">
+    <h2 id="confirmTitle">Are you sure?</h2>
+    <p id="confirmText" class="confirm-text"></p>
+    <div class="actions">
+      <span class="spacer"></span>
+      <button class="btn-ghost" id="confirmCancelBtn" type="button">Cancel</button>
+      <button class="btn-danger" id="confirmOkBtn" type="button">Delete</button>
+    </div>
+  </div>
+</div>
+
+<div class="menu-pop" id="listMenu" role="menu" aria-label="Actions"></div>
+
+<!-- Archived cards -->
+<div class="overlay" id="archiveOverlay" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="archiveTitle">
+    <h2 id="archiveTitle">Archived cards</h2>
+    <p class="modal-sub">Archived cards stay on this board but are hidden from the lists. Restore one to put it back where it was.</p>
+    <div id="archiveBody" class="modal-scroll"></div>
+    <div class="actions">
+      <span class="spacer"></span>
+      <button class="btn-ghost" type="button" data-close-overlay="archiveOverlay">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Activity log -->
+<div class="overlay" id="activityOverlay" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="activityTitle">
+    <h2 id="activityTitle">Activity log</h2>
+    <p class="modal-sub" id="activitySub"></p>
+    <div id="activityBody" class="modal-scroll"></div>
+    <div class="actions">
+      <span class="spacer"></span>
+      <button class="btn-ghost" type="button" data-close-overlay="activityOverlay">Close</button>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="importFile" accept="application/json,.json" hidden />
+
+<div class="toast" id="toast" role="status" aria-live="polite"><span id="toastMsg"></span><button type="button" class="toast-undo" id="toastUndo" hidden>Undo</button></div>
+
+<script>
+(function(){
+"use strict";
+
+var LS_KEY = "atomic-boards-v1";
+var STORE_VERSION = 2;
+
+var LABELS = [
+  {name:"Engineering", color:"#2f6fed"},
+  {name:"Design",      color:"#7a4fd0"},
+  {name:"Marketing",   color:"#b45309"},
+  {name:"Research",    color:"#0e7c66"},
+  {name:"Bug",         color:"#c9372c"},
+  {name:"Launch",      color:"#1f8455"},
+  {name:"Content",     color:"#a5488f"}
+];
+var LABEL_NAMES = LABELS.map(function(l){ return l.name; });
+var PEOPLE = ["Sumit","Priya","Alex","Jordan","Maya","Rohan"];
+var AV_COLORS = {"Sumit":"#0c66e4","Priya":"#a5488f","Alex":"#0e7c66","Jordan":"#b45309","Maya":"#7a4fd0","Rohan":"#577590"};
+var AV_PALETTE = ["#0c66e4","#a5488f","#0e7c66","#b45309","#7a4fd0","#577590","#b23c17","#1f6f8b"];
+
+/* ---------------- Small helpers ---------------- */
+var uidSeq = 1;
+function uid(p){ return p + "-" + Date.now().toString(36) + "-" + (uidSeq++); }
+function dISO(offsetDays){
+  var d = new Date(); d.setHours(12,0,0,0); d.setDate(d.getDate()+offsetDays);
+  return d.toISOString().slice(0,10);
+}
+function todayISO(){ return dISO(0); }
+function esc(s){
+  return String(s==null?"":s).replace(/[&<>"']/g,function(c){
+    return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+  });
+}
+function initials(name){
+  name = String(name||"").trim();
+  if(!name) return "?";
+  return name.split(/\s+/).map(function(w){ return w[0]; }).join("").slice(0,2).toUpperCase();
+}
+function plural(n, word){ return n + " " + word + (n === 1 ? "" : "s"); }
+function fmtDate(iso){
+  if(!iso) return "";
+  var d = new Date(iso+"T12:00:00");
+  if(isNaN(d)) return iso;
+  return d.toLocaleDateString(undefined,{month:"short",day:"numeric"});
+}
+function fmtDateTime(iso){
+  var d = new Date(iso);
+  if(isNaN(d)) return "";
+  return d.toLocaleString(undefined,{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"});
+}
+function timeAgo(iso){
+  var t = new Date(iso).getTime();
+  if(isNaN(t)) return "";
+  var m = Math.round((Date.now()-t)/60000);
+  if(m < 1) return "just now";
+  if(m < 60) return m + "m ago";
+  var h = Math.round(m/60);
+  if(h < 24) return h + "h ago";
+  var d = Math.round(h/24);
+  if(d < 7) return d + "d ago";
+  return fmtDate(String(iso).slice(0,10));
+}
+function isDoneList(title){
+  return /^(done|complete|completed|published|shipped|mastered|archived?)$/i.test(String(title||"").trim());
+}
+function labelObj(name){ return LABELS.find(function(l){ return l.name===name; }); }
+function sameLabels(a, b){
+  return a.length === b.length && a.every(function(n){ return b.indexOf(n) >= 0; });
+}
+function colorFor(name){
+  if(!name) return "#577590";
+  if(AV_COLORS[name]) return AV_COLORS[name];
+  var h = 0;
+  for(var i=0;i<name.length;i++) h = (h*31 + name.charCodeAt(i)) % 997;
+  return AV_PALETTE[h % AV_PALETTE.length];
+}
+function slug(s){
+  return String(s||"board").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"").slice(0,48) || "board";
+}
+function clone(obj){ return JSON.parse(JSON.stringify(obj)); }
+
+/* ---------------- Due helpers ---------------- */
+function dueStatus(c, list){
+  if(!c.due) return "";
+  if(list && isDoneList(list.title)) return "done";
+  var t = todayISO();
+  if(c.due < t) return "overdue";
+  if(c.due <= dISO(2)) return "soon";
+  return "";
+}
+function dueLabel(c, list){
+  var st = dueStatus(c, list);
+  if(st==="overdue"){
+    var days = Math.round((new Date(todayISO()) - new Date(c.due))/86400000);
+    return "⚠ " + fmtDate(c.due) + " · " + days + (days===1?" day":" days") + " overdue";
+  }
+  if(st==="soon"){
+    if(c.due===todayISO()) return "◷ Due today · " + fmtDate(c.due);
+    return "◷ Due soon · " + fmtDate(c.due);
+  }
+  if(st==="done") return "✓ " + fmtDate(c.due);
+  return "◷ " + fmtDate(c.due);
+}
+
+/* ---------------- Seed data ---------------- */
+function ck(items, doneCount){
+  return (items||[]).map(function(t,i){
+    return {id:uid("k"), text:t, done:i < (doneCount||0)};
+  });
+}
+function card(title, desc, dueOff, label, assignee, checks, doneCount){
+  return {
+    id:uid("c"), title:title, desc:desc, due: dueOff===null?"":dISO(dueOff),
+    labels: label ? [label] : [], assignee:assignee||"",
+    checklist: ck(checks||[], doneCount||0)
+  };
+}
+function act(type, text, minsAgo){
+  return {id:uid("a"), type:type, text:text, at:new Date(Date.now() - minsAgo*60000).toISOString()};
+}
+function seed(){
+  return {
+    version: STORE_VERSION,
+    activeBoardId: null,
+    boards: [
+      { id:uid("b"), name:"Product Launch", archived:[
+          { card:card("Homepage hero v1","Superseded by the new hero concept; kept for reference.",-12,"Design","Maya"), fromListId:null, fromListTitle:"Done", archivedAt:new Date(Date.now()-3*86400000).toISOString() }
+        ], activity:[
+          act("move","Moved “Press kit assets” to Done",34),
+          act("edit","Edited “Landing page hero + screenshots”",95),
+          act("create","Created “Beta feedback synthesis”",260)
+        ], lists:[
+        { id:uid("l"), title:"Backlog", cards:[
+          card("Competitor pricing teardown","Compare pricing pages of the three closest competitors and note where our launch tier sits.",14,"Research","Priya",["List the three closest competitors","Capture every plan tier","Flag where we win on price"],1),
+          card("Draft launch FAQ for support","Ten questions support will get on day one, with approved answers from product.",10,"Content","",["Collect questions from support","Draft answers","Product review"]),
+          card("Beta feedback synthesis","Roll the 42 beta survey responses into themes and pull the top five quotes for the launch post.",6,"Research","Maya",["Tag every response","Group into themes","Pick the top five quotes"],2)
+        ]},
+        { id:uid("l"), title:"Doing", cards:[
+          card("Landing page hero + screenshots","New hero copy is approved. Swap in the final product screenshots and check mobile crop.",1,"Design","Sumit",["Lock hero copy","Drop in final screenshots","Check the mobile crop"],2),
+          card("Fix checkout redirect loop","Users on Safari bounce between /checkout and /cart after applying a coupon. Repro steps in the thread.",-2,"Bug","Alex",["Reproduce on Safari","Find the redirect guard","Ship the fix and verify"]),
+          card("Email sequence for launch week","Drafts 1–3 are written. Draft 4 (launch day) still needs the founder quote.",3,"Marketing","Jordan",["Draft 1 — teaser","Draft 2 — problem","Draft 3 — feature","Draft 4 — launch day"],3)
+        ]},
+        { id:uid("l"), title:"Review", cards:[
+          card("Pricing page v2","Needs a final legal pass on the money-back wording before it can ship.",-1,"Launch","Sumit",["Copy locked","Design review","Legal sign-off"],1),
+          card("Onboarding checklist copy","Five-step checklist reviewed by design; waiting on product sign-off.",2,"Content","")
+        ]},
+        { id:uid("l"), title:"Done", cards:[
+          card("Press kit assets","Logo pack, founder photos and one-pager exported and shared with the PR contact.",-4,"Marketing","Jordan",["Logo pack","Founder photos","One-pager"],3),
+          card("Analytics events for signup flow","page_view, signup_start and signup_complete firing in production and verified.",-3,"Engineering","Alex"),
+          card("Launch date announcement post","Scheduled across blog and socials for launch morning.",-2,"Content","Maya")
+        ]}
+      ]},
+      { id:uid("b"), name:"Engineering Sprint", archived:[], activity:[
+          act("create","Created “Flaky CI test: payments suite”",48),
+          act("move","Moved “Dark mode for settings pages” to Done",180)
+        ], lists:[
+        { id:uid("l"), title:"To Do", cards:[
+          card("Add rate limiting to public API","Token bucket per API key, 100 req/min default, 429 with Retry-After header.",5,"Engineering","",["Choose the limiter strategy","Add the middleware","Load test at 2× peak"]),
+          card("Write migration for billing tables","Backfill plan needed — table has ~1.2M rows, migration must run without downtime.",7,"Engineering","Rohan",["Dry run on staging","Write the backfill","Rollback plan"])
+        ]},
+        { id:uid("l"), title:"In Progress", cards:[
+          card("WebSocket reconnect backoff","Client drops and reconnects in a tight loop on flaky networks. Add exponential backoff with jitter.",0,"Engineering","Sumit",["Repro the tight loop","Add backoff with jitter","Test on a throttled connection"],2),
+          card("Flaky CI test: payments suite","Fails ~1 in 5 runs on the refund path. Quarantine, find the race, fix.",-1,"Bug","Priya")
+        ]},
+        { id:uid("l"), title:"Code Review", cards:[
+          card("PR #482 — search indexing rework","Moves indexing to a background job. Needs a second reviewer on the migration part.",1,"Engineering","Alex",["First review","Migration review","Merge"])
+        ]},
+        { id:uid("l"), title:"Done", cards:[
+          card("Upgrade Postgres to 16","Completed in the maintenance window; connection pool settings re-tuned after.",-5,"Engineering","Rohan"),
+          card("Dark mode for settings pages","Ships behind the existing theme toggle; contrast checked against WCAG AA.",-2,"Design","Maya")
+        ]}
+      ]},
+      { id:uid("b"), name:"Marketing Site Refresh", archived:[], activity:[
+          act("edit","Edited “New testimonial wall layout”",22),
+          act("create","Created “Interactive ROI calculator”",320)
+        ], lists:[
+        { id:uid("l"), title:"Ideas", cards:[
+          card("Customer story: logistics case study","Interview the ops lead, pull before/after numbers, draft by end of month.",12,"Content","",["Interview booked","Pull the numbers","First draft"]),
+          card("Interactive ROI calculator","Simple three-input calculator for the solutions page. Needs design spike first.",16,"Design","Maya")
+        ]},
+        { id:uid("l"), title:"Writing", cards:[
+          card("Homepage copy rewrite","Shorter, plainer, one clear CTA per section. First draft in progress.",4,"Content","Jordan",["Audit current copy","First draft","Tighten to one CTA per section"],1)
+        ]},
+        { id:uid("l"), title:"Design", cards:[
+          card("New testimonial wall layout","Grid layout with photos; waiting on two customer photo approvals.",-3,"Design","Priya")
+        ]},
+        { id:uid("l"), title:"Published", cards:[
+          card("Blog: 2026 roadmap post","Live and linked from the homepage banner.",-6,"Marketing","Jordan")
+        ]}
+      ]}
+    ]
+  };
+}
+
+/* ---------------- Templates ---------------- */
+function launchTemplate(){
+  return [
+    { id:uid("l"), title:"Backlog", cards:[
+      card("Competitor pricing teardown","Compare the three closest competitors and note where our launch tier sits.",12,"Research","Priya",["List competitors","Capture plan tiers","Note our advantage"],1),
+      card("Draft launch FAQ","Ten questions support will get on day one.",9,"Content","",["Collect questions","Draft answers","Product review"])
+    ]},
+    { id:uid("l"), title:"Doing", cards:[
+      card("Landing page hero + screenshots","Final copy is approved; swap in the product screenshots.",2,"Design","Sumit",["Lock hero copy","Add screenshots","Check mobile crop"],2)
+    ]},
+    { id:uid("l"), title:"Review", cards:[
+      card("Pricing page v2","Final legal pass on the money-back wording.",-1,"Launch","Sumit",["Copy locked","Legal sign-off"],1)
+    ]},
+    { id:uid("l"), title:"Done", cards:[
+      card("Press kit assets","Logo pack, founder photos and one-pager shared with PR.",-3,"Marketing","Jordan",["Logo pack","Founder photos","One-pager"],3)
+    ]}
+  ];
+}
+function studyTemplate(){
+  return [
+    { id:uid("l"), title:"Topics to learn", cards:[
+      card("Linear algebra — week 1","Vectors, matrices and the geometry behind them.",3,"Research","",["Watch lecture 1","Work through problem set 1","Summarise key formulas"]),
+      card("Statistics — distributions","Normal, binomial and when each one applies.",5,"Research","",["Read chapter 4","Make a one-page cheat sheet"])
+    ]},
+    { id:uid("l"), title:"In progress", cards:[
+      card("Data structures — trees","Binary trees, traversal orders and balancing.",1,"Engineering","",["Implement BST insert/delete","Trace all three traversals","Solve three practice problems"],1)
+    ]},
+    { id:uid("l"), title:"Revision", cards:[
+      card("Practice exam 1","Timed run under exam conditions, then mark it honestly.",-1,"Research","",["Sit the paper in 90 minutes","Mark every answer","List weak topics"],2)
+    ]},
+    { id:uid("l"), title:"Mastered", cards:[
+      card("Big-O analysis","Can classify the complexity of the core algorithms without notes.",-4,"Engineering","")
+    ]}
+  ];
+}
+var TEMPLATES = [
+  { id:"blank", name:"Blank board", desc:"Three empty lists: To Do, Doing, Done.", build:function(){
+      return [
+        {id:uid("l"), title:"To Do", cards:[]},
+        {id:uid("l"), title:"Doing", cards:[]},
+        {id:uid("l"), title:"Done", cards:[]}
+      ];
+    }},
+  { id:"launch", name:"Product launch", desc:"Backlog → Doing → Review → Done, with checklists and owners.", build:launchTemplate },
+  { id:"study", name:"Study plan", desc:"Topics to learn → In progress → Revision → Mastered.", build:studyTemplate }
+];
+function templateById(id){ return TEMPLATES.find(function(t){ return t.id===id; }) || TEMPLATES[0]; }
+
+/* ---------------- State ---------------- */
+function normalizeCard(c, fresh){
+  c = c || {};
+  var items = Array.isArray(c.checklist) ? c.checklist : [];
+  var labels = Array.isArray(c.labels) ? c.labels : (c.label ? [c.label] : []);
+  return {
+    id: fresh ? uid("c") : (c.id || uid("c")),
+    title: String(c.title==null ? "Untitled card" : c.title),
+    desc: String(c.desc==null ? "" : c.desc),
+    due: /^\d{4}-\d{2}-\d{2}$/.test(String(c.due||"")) ? c.due : "",
+    labels: labels.filter(function(n, i){ return LABEL_NAMES.indexOf(n) >= 0 && labels.indexOf(n) === i; }),
+    assignee: typeof c.assignee === "string" ? c.assignee.slice(0,60) : "",
+    checklist: items.map(function(it){
+      it = it || {};
+      return {id: fresh ? uid("k") : (it.id || uid("k")), text:String(it.text==null?"":it.text), done: !!it.done};
+    }).filter(function(it){ return it.text.trim() !== ""; })
+  };
+}
+function normalizeList(l, fresh){
+  l = l || {};
+  return {
+    id: fresh ? uid("l") : (l.id || uid("l")),
+    title: String(l.title==null ? "Untitled list" : l.title),
+    cards: (Array.isArray(l.cards) ? l.cards : []).map(function(c){ return normalizeCard(c, fresh); })
+  };
+}
+function normalizeBoard(b, fresh){
+  b = b || {};
+  var lists = (Array.isArray(b.lists) ? b.lists : []).map(function(l){ return normalizeList(l, fresh); });
+  var archived = (Array.isArray(b.archived) ? b.archived : []).map(function(a){
+    a = a || {};
+    return {
+      card: normalizeCard(a.card, fresh),
+      fromListId: fresh ? null : (a.fromListId || null),
+      fromListTitle: String(a.fromListTitle || "Archived"),
+      archivedAt: a.archivedAt || new Date().toISOString()
+    };
+  });
+  var activity = (Array.isArray(b.activity) ? b.activity : []).filter(function(a){ return a && a.text; }).map(function(a){
+    return {id: fresh ? uid("a") : (a.id || uid("a")), type: String(a.type||"edit"), text: String(a.text||""), at: a.at || new Date().toISOString()};
+  }).slice(0,80);
+  return {
+    id: fresh ? uid("b") : (b.id || uid("b")),
+    name: String(b.name==null ? "Untitled board" : b.name).slice(0,80),
+    lists: lists,
+    archived: archived,
+    activity: activity
+  };
+}
+function save(){
+  try{ localStorage.setItem(LS_KEY, JSON.stringify(state)); }catch(e){}
+}
+function load(){
+  try{
+    var raw = localStorage.getItem(LS_KEY);
+    if(raw){
+      var parsed = JSON.parse(raw);
+      var boards = parsed && Array.isArray(parsed.boards) ? parsed.boards : [];
+      if(boards.length){
+        return {
+          version: STORE_VERSION,
+          activeBoardId: parsed.activeBoardId || boards[0].id,
+          boards: boards.map(function(b){ return normalizeBoard(b, false); })
+        };
+      }
+    }
+  }catch(e){}
+  var s = seed();
+  s.boards = s.boards.map(function(b){ return normalizeBoard(b, false); });
+  s.activeBoardId = s.boards[0].id;
+  return s;
+}
+var state = load();
+if(!state.boards || !state.boards.length){ state = seed(); state.boards = state.boards.map(function(b){ return normalizeBoard(b,false); }); }
+if(!state.boards.some(function(b){ return b.id===state.activeBoardId; })) state.activeBoardId = state.boards[0].id;
+
+var searchQuery = "";
+var activeFilter = {kind:"all", value:""};
+var editingCard = null;
+var boardModalMode = "create";
+var confirmCb = null;
+
+function board(){ return state.boards.find(function(b){ return b.id===state.activeBoardId; }) || state.boards[0]; }
+function boardById(id){ return state.boards.find(function(b){ return b.id===id; }) || null; }
+function allCards(b){
+  var out = [];
+  (b || board()).lists.forEach(function(l){ l.cards.forEach(function(c){ out.push({card:c, list:l}); }); });
+  return out;
+}
+function findCard(cardId, inBoard){
+  var b = inBoard || board();
+  for(var i=0;i<b.lists.length;i++){
+    var list = b.lists[i];
+    var c = list.cards.find(function(x){ return x.id===cardId; });
+    if(c) return {card:c, list:list, board:b};
+  }
+  return null;
+}
+function logAct(type, text, inBoard){
+  var b = inBoard || board();
+  if(!b.activity) b.activity = [];
+  b.activity.unshift({id:uid("a"), type:type, text:text, at:new Date().toISOString()});
+  b.activity = b.activity.slice(0,80);
+}
+
+/* ---------------- Toast + undo ---------------- */
+var $toast = document.getElementById("toast");
+var $toastMsg = document.getElementById("toastMsg");
+var $toastUndo = document.getElementById("toastUndo");
+var toastTimer = null, toastUndoFn = null;
+
+function hideToast(){
+  $toast.classList.remove("show");
+  $toastUndo.hidden = true;
+  toastUndoFn = null;
+}
+function toast(msg, undoFn){
+  clearTimeout(toastTimer);
+  $toastMsg.textContent = msg;
+  if(typeof undoFn === "function"){
+    toastUndoFn = undoFn;
+    $toastUndo.hidden = false;
+    $toast.classList.add("show","has-undo");
+    toastTimer = setTimeout(hideToast, 5000);
+  } else {
+    toastUndoFn = null;
+    $toastUndo.hidden = true;
+    $toast.classList.remove("has-undo");
+    $toast.classList.add("show");
+    toastTimer = setTimeout(hideToast, 2400);
+  }
+}
+function snapshot(){ return JSON.stringify(state); }
+function offerUndo(msg, snap){
+  toast(msg, function(){
+    try{ state = JSON.parse(snap); }catch(e){ return; }
+    render();
+    toast("Restored");
+  });
+}
+
+/* ---------------- Render ---------------- */
+var $tabs = document.getElementById("boardTabs");
+var $lists = document.getElementById("lists");
+var $title = document.getElementById("boardTitle");
+var $summary = document.getElementById("summaryBody");
+var $match = document.getElementById("matchNote");
+var $filterRow = document.getElementById("filterRow");
+var enterTimer = null;
+
+function render(opts){
+  opts = opts || {};
+  renderTabs();
+  renderTitle();
+  renderToolbar();
+  renderFilters();
+  renderLists();
+  renderSummary();
+  save();
+  if(opts.enter){
+    $lists.classList.remove("enter");
+    void $lists.offsetWidth;
+    $lists.classList.add("enter");
+    clearTimeout(enterTimer);
+    enterTimer = setTimeout(function(){ $lists.classList.remove("enter"); }, 900);
+  }
+}
+
+function renderTabs(){
+  $tabs.innerHTML = state.boards.map(function(b){
+    var n = allCards(b).length;
+    return '<button type="button" class="board-tab' + (b.id===state.activeBoardId?" active":"") + '"'
+      + ' data-board="' + b.id + '" data-board-drop="' + b.id + '"'
+      + ' aria-current="' + (b.id===state.activeBoardId?"page":"false") + '">'
+      + esc(b.name) + '<span class="cnt">' + n + '</span></button>';
+  }).join("");
+  Array.prototype.forEach.call($tabs.querySelectorAll("[data-board]"), function(btn){
+    btn.addEventListener("click", function(){
+      if(Date.now() - suppressClickAt < 300) return;
+      var id = btn.getAttribute("data-board");
+      if(id === state.activeBoardId) return;
+      state.activeBoardId = id;
+      searchQuery = "";
+      activeFilter = {kind:"all", value:""};
+      var si = document.getElementById("searchInput");
+      if(si) si.value = "";
+      render({enter:true});
+      toast("Switched to “" + board().name + "”");
+    });
+  });
+
+  /* Dropping a card on another board's tab moves it to that board. */
+  Array.prototype.forEach.call($tabs.querySelectorAll("[data-board-drop]"), function(tab){
+    var id = tab.getAttribute("data-board-drop");
+    tab.addEventListener("dragover", function(e){
+      if(!dragCardId || id === state.activeBoardId) return;
+      e.preventDefault();
+      if(e.dataTransfer) e.dataTransfer.dropEffect = "move";
+      if(!tab.classList.contains("drop-target")){
+        clearDropUI();
+        tab.classList.add("drop-target");
+      }
+    });
+    tab.addEventListener("dragleave", function(){ tab.classList.remove("drop-target"); });
+    tab.addEventListener("drop", function(e){
+      if(!dragCardId || id === state.activeBoardId) return;
+      e.preventDefault();
+      var cardId = dragCardId;
+      clearDropUI();
+      dragCardId = null;
+      moveCardToBoard(id, cardId);
+    });
+  });
+}
+
+function renderTitle(){ $title.textContent = board().name; }
+
+function renderToolbar(){
+  var b = board();
+  var archivedCount = b.archived.length;
+  var ac = document.getElementById("archiveCount");
+  if(ac) ac.textContent = String(archivedCount);
+  var ab = document.getElementById("archiveBtn");
+  if(ab) ab.setAttribute("aria-label", "Archived cards (" + archivedCount + ")");
+  var total = allCards(b).length;
+  var meta = document.getElementById("boardMeta");
+  if(meta) meta.textContent = b.lists.length + (b.lists.length===1?" list":" lists") + " · " + total + (total===1?" card":" cards") + " · saved in this browser";
+}
+
+function filterIs(kind, value){
+  return activeFilter.kind === kind && (value === undefined || activeFilter.value === value);
+}
+function hasFilters(){ return !!searchQuery || activeFilter.kind !== "all"; }
+
+function renderFilters(){
+  var html = '<span class="filter-label">Filter</span>';
+  html += '<button type="button" class="fchip' + (filterIs("all")?" on":"") + '" data-filter="all">All cards</button>';
+  html += '<button type="button" class="fchip' + (filterIs("overdue")?" on":"") + '" data-filter="overdue">'
+    + '<span class="dot danger"></span>Overdue</button>';
+  html += '<button type="button" class="fchip' + (filterIs("soon")?" on":"") + '" data-filter="soon">'
+    + '<span class="dot warn"></span>Due soon</button>';
+  LABELS.forEach(function(l){
+    html += '<button type="button" class="fchip' + (filterIs("label", l.name)?" on":"") + '" data-filter="label:' + esc(l.name) + '">'
+      + '<span class="dot" style="background:' + l.color + '"></span>' + esc(l.name) + '</button>';
+  });
+  if(hasFilters()){
+    html += '<button type="button" class="fchip" id="clearFiltersChip" title="Clear search and filters">✕ Clear</button>';
+  }
+  $filterRow.innerHTML = html;
+
+  Array.prototype.forEach.call($filterRow.querySelectorAll("[data-filter]"), function(btn){
+    btn.addEventListener("click", function(){
+      var v = btn.getAttribute("data-filter");
+      if(v === "all") activeFilter = {kind:"all", value:""};
+      else if(v === "overdue" || v === "soon") activeFilter = {kind:v, value:""};
+      else activeFilter = {kind:"label", value:v.slice(6)};
+      renderLists();
+      renderFilters();
+      renderSummary();
+      save();
+    });
+  });
+  var clear = document.getElementById("clearFiltersChip");
+  if(clear) clear.addEventListener("click", clearFilters);
+}
+
+function clearFilters(){
+  searchQuery = "";
+  activeFilter = {kind:"all", value:""};
+  var si = document.getElementById("searchInput");
+  if(si) si.value = "";
+  renderLists();
+  renderFilters();
+  renderSummary();
+  save();
+}
+
+function cardMatches(c, list){
+  if(activeFilter.kind === "label" && (c.labels || []).indexOf(activeFilter.value) < 0) return false;
+  if(activeFilter.kind === "overdue" && dueStatus(c, list) !== "overdue") return false;
+  if(activeFilter.kind === "soon" && dueStatus(c, list) !== "soon") return false;
+  if(!searchQuery) return true;
+  var q = searchQuery.toLowerCase();
+  return (c.title + " " + (c.desc||"") + " " + (c.assignee||"") + " " + (c.labels||[]).join(" ") + " " + (c.checklist||[]).map(function(i){return i.text;}).join(" "))
+    .toLowerCase().indexOf(q) > -1;
+}
+
+/* ---------------- Card + list rendering ---------------- */
+function cardHTML(c, list){
+  var labels = c.labels || [];
+  var st = dueStatus(c, list);
+  var match = cardMatches(c, list);
+  var checks = c.checklist || [];
+  var doneCount = checks.filter(function(i){ return i.done; }).length;
+  var h = '<article class="card' + (match ? "" : " filtered-out") + '" tabindex="0" role="button" aria-haspopup="dialog"'
+    + ' aria-label="' + esc(c.title) + (c.due ? ", due " + esc(fmtDate(c.due)) : "") + '"'
+    + ' data-card="' + c.id + '">';
+  h += '<button type="button" class="edit-btn" data-edit="' + c.id + '" tabindex="-1" title="Edit card" aria-label="Edit card">✎</button>';
+  if(labels.length){
+    h += '<div class="labels">' + labels.map(function(name){
+      var lo = labelObj(name);
+      return lo ? '<span class="lbl" style="background:' + lo.color + '">' + esc(lo.name) + '</span>' : '';
+    }).join("") + '</div>';
+  }
+  h += '<h4>' + esc(c.title) + '</h4>';
+  if(c.desc) h += '<p>' + esc(c.desc) + '</p>';
+  h += '<div class="card-foot">';
+  if(c.due) h += '<span class="due ' + st + '">' + esc(dueLabel(c, list)) + '</span>';
+  if(checks.length){
+    h += '<span class="ck-chip' + (doneCount === checks.length ? " complete" : "") + '" title="' + doneCount + ' of ' + checks.length + ' checklist items done">'
+      + '<span class="ck-bar"><i style="width:' + Math.round(doneCount / checks.length * 100) + '%"></i></span>'
+      + doneCount + '/' + checks.length + '</span>';
+  }
+  if(c.assignee){
+    h += '<span class="person"><span class="avatar" style="background:' + colorFor(c.assignee) + '">' + esc(initials(c.assignee)) + '</span>'
+      + '<span class="who">' + esc(c.assignee) + '</span></span>';
+  } else {
+    h += '<span class="unassigned" title="No assignee">Unassigned</span>';
+  }
+  h += '</div></article>';
+  return h;
+}
+
+function emptyBoardHTML(){
+  var h = '<div class="empty-panel">'
+    + '<div class="glyph" aria-hidden="true">▥</div>'
+    + '<h2>This board is empty</h2>'
+    + '<p>Add your first list, or start from a ready-made template with lists and cards already in place.</p>'
+    + '<form class="add-list-form" id="emptyAddListForm" autocomplete="off">'
+    + '<input id="emptyListName" type="text" placeholder="List title, e.g. To do" aria-label="New list title" />'
+    + '<div class="form-row"><button type="submit" class="btn-primary">Add list</button>'
+    + '<button type="button" class="btn-ghost" id="emptyTmplBlank">Use blank template</button></div>'
+    + '</form>'
+    + '<div class="tmpl-row"><button type="button" class="btn-ghost" data-tmpl="launch">+ Product launch template</button>'
+    + '<button type="button" class="btn-ghost" data-tmpl="study">+ Study plan template</button></div>'
+    + '</div>';
+  return h;
+}
+function wireEmptyBoard(){
+  var form = document.getElementById("emptyAddListForm");
+  if(form){
+    form.addEventListener("submit", function(e){
+      e.preventDefault();
+      var v = document.getElementById("emptyListName").value.trim();
+      if(!v) return;
+      board().lists.push({id:uid("l"), title:v, cards:[]});
+      logAct("create", "Added list “" + v + "”");
+      render();
+      toast("List “" + v + "” added");
+    });
+  }
+  var blank = document.getElementById("emptyTmplBlank");
+  if(blank) blank.addEventListener("click", function(){ applyTemplate("blank"); });
+  Array.prototype.forEach.call(document.querySelectorAll("[data-tmpl]"), function(btn){
+    btn.addEventListener("click", function(){ applyTemplate(btn.getAttribute("data-tmpl")); });
+  });
+}
+function applyTemplate(id){
+  var t = templateById(id);
+  var b = board();
+  b.lists = t.build();
+  logAct("create", "Started board from the “" + t.name + "” template");
+  render();
+  toast("Applied “" + t.name + "” template");
+}
+
+function noResultsHTML(){
+  return '<div class="empty-panel">'
+    + '<div class="glyph" aria-hidden="true">⌕</div>'
+    + '<h2>No cards match</h2>'
+    + '<p>Nothing on this board matches your search and filters. Try a different word, or clear everything and start again.</p>'
+    + '<div class="panel-actions"><button type="button" class="btn-primary" id="noResultsClear">Clear search &amp; filters</button>'
+    + '<button type="button" class="btn-ghost" id="noResultsAdd">+ Add a card</button></div>'
+    + '</div>';
+}
+function wireNoResults(){
+  var c = document.getElementById("noResultsClear");
+  if(c) c.addEventListener("click", clearFilters);
+  var a = document.getElementById("noResultsAdd");
+  if(a) a.addEventListener("click", function(){ clearFilters(); newCardShortcut(); });
+}
+
+function renderLists(){
+  var b = board();
+  var filtering = hasFilters();
+  var totalAll = 0, totalMatch = 0;
+  b.lists.forEach(function(l){
+    l.cards.forEach(function(c){ totalAll++; if(cardMatches(c, l)) totalMatch++; });
+  });
+
+  $match.hidden = !filtering;
+  if(filtering){
+    $match.innerHTML = 'Showing <strong>' + totalMatch + '</strong> of ' + totalAll + ' cards'
+      + (searchQuery ? ' matching “<strong>' + esc(searchQuery) + '</strong>”' : '')
+      + (activeFilter.kind === "label" ? ' with label <strong>' + esc(activeFilter.value) + '</strong>' : '')
+      + (activeFilter.kind === "overdue" ? ' that are <strong>overdue</strong>' : '')
+      + (activeFilter.kind === "soon" ? ' <strong>due within 2 days</strong>' : '')
+      + ' · <button type="button" class="link-btn" id="matchClear">Clear</button>';
+  }
+
+  if(b.lists.length === 0){
+    $lists.innerHTML = emptyBoardHTML();
+    wireEmptyBoard();
+    return;
+  }
+  if(filtering && totalMatch === 0){
+    $lists.innerHTML = noResultsHTML();
+    wireNoResults();
+    return;
+  }
+
+  var html = "";
+  b.lists.forEach(function(l){
+    var visible = 0;
+    l.cards.forEach(function(c){ if(cardMatches(c, l)) visible++; });
+    html += '<section class="list" data-list="' + l.id + '">';
+    html += '<div class="list-head"><h3 class="list-title" data-ltitle="' + l.id + '" title="Click to rename" tabindex="0" role="button">' + esc(l.title) + '</h3>'
+      + '<span class="list-count" title="' + l.cards.length + ' cards' + (filtering ? ' (' + visible + ' matching)' : '') + '">'
+      + (filtering ? visible + '/' + l.cards.length : l.cards.length) + '</span>'
+      + '<button type="button" class="icon-btn" data-lmenu="' + l.id + '" aria-label="List actions for ' + esc(l.title) + '" aria-haspopup="menu">⋯</button></div>';
+    html += '<div class="cards" data-cards="' + l.id + '" role="list" aria-label="' + esc(l.title) + ' cards">';
+    if(l.cards.length === 0){
+      html += '<div class="empty-hint"><strong>No cards yet</strong><span>Drop a card here, or add the first one.</span>'
+        + '<button type="button" class="link-btn" data-addcard="' + l.id + '">+ Add a card</button></div>';
+    } else if(filtering && visible === 0){
+      html += '<div class="empty-hint"><span>No cards in this list match the filter.</span></div>';
+    }
+    l.cards.forEach(function(c){ html += cardHTML(c, l); });
+    html += '</div>';
+    html += '<div class="composer" data-composer="' + l.id + '"><button type="button" class="add-card-btn" data-addcard="' + l.id + '">+ Add a card</button></div>';
+    html += '</section>';
+  });
+  html += '<div id="addListSlot"></div>';
+  $lists.innerHTML = html;
+  renderAddListSlot();
+  wireLists();
+}
+
+function renderAddListSlot(){
+  var slot = document.getElementById("addListSlot");
+  if(!slot) return;
+  var empty = board().lists.length === 0;
+  slot.innerHTML = '<button type="button" class="add-list" id="addListBtn2">' + (empty ? "+ Add your first list" : "+ Add another list") + '</button>';
+  document.getElementById("addListBtn2").addEventListener("click", function(){
+    slot.innerHTML = '<div class="add-list-form"><input id="newListName" type="text" placeholder="List title, e.g. QA" aria-label="List title" autocomplete="off" />'
+      + '<div class="form-row"><button type="button" class="btn-primary" id="confirmList">Add list</button>'
+      + '<button type="button" class="btn-ghost" id="cancelList">Cancel</button></div></div>';
+    var inp = document.getElementById("newListName");
+    inp.focus();
+    function commit(){
+      var v = inp.value.trim();
+      if(!v){ inp.focus(); return; }
+      board().lists.push({id:uid("l"), title:v, cards:[]});
+      logAct("create", "Added list “" + v + "”");
+      render();
+      toast("List “" + v + "” added");
+    }
+    document.getElementById("confirmList").addEventListener("click", commit);
+    inp.addEventListener("keydown", function(e){ if(e.key === "Enter"){ e.preventDefault(); commit(); } });
+    document.getElementById("cancelList").addEventListener("click", renderLists);
+  });
+}
+
+/* ---------------- Wiring: rename, menus, composer, cards ---------------- */
+function wireLists(){
+  var b = board();
+
+  Array.prototype.forEach.call($lists.querySelectorAll("[data-ltitle]"), function(el){
+    function startEdit(){
+      var list = b.lists.find(function(x){ return x.id === el.getAttribute("data-ltitle"); });
+      if(!list) return;
+      var input = document.createElement("input");
+      input.className = "list-title-input";
+      input.value = list.title;
+      input.setAttribute("aria-label", "Rename list");
+      el.replaceWith(input);
+      input.focus(); input.select();
+      var done = false;
+      function commit(saveIt){
+        if(done) return;
+        done = true;
+        var v = input.value.trim();
+        if(saveIt && v && v !== list.title){
+          logAct("edit", "Renamed list “" + list.title + "” to “" + v + "”");
+          list.title = v;
+        }
+        render();
+      }
+      input.addEventListener("blur", function(){ commit(true); });
+      input.addEventListener("keydown", function(e){
+        if(e.key === "Enter"){ e.preventDefault(); commit(true); }
+        if(e.key === "Escape"){ e.preventDefault(); commit(false); }
+      });
+    }
+    el.addEventListener("click", startEdit);
+    el.addEventListener("keydown", function(e){ if(e.key === "Enter" || e.key === " "){ e.preventDefault(); startEdit(); } });
+  });
+
+  Array.prototype.forEach.call($lists.querySelectorAll("[data-lmenu]"), function(btn){
+    btn.addEventListener("click", function(e){
+      e.stopPropagation();
+      var listId = btn.getAttribute("data-lmenu");
+      var list = b.lists.find(function(l){ return l.id === listId; });
+      if(!list) return;
+      openMenu(btn, [
+        {icon:"＋", label:"Add a card", onClick:function(){ openComposer(listId); }},
+        {icon:"✎", label:"Rename list", onClick:function(){
+          var t = $lists.querySelector('[data-ltitle="' + listId + '"]');
+          if(t) t.click();
+        }},
+        {icon:"→", label:"Move all cards to Done", onClick:function(){
+          var done = b.lists.find(function(l){ return isDoneList(l.title); });
+          if(!done){ toast("This board has no Done list"); return; }
+          if(done === list){ toast("Cards are already in “" + done.title + "”"); return; }
+          var snap = snapshot();
+          done.cards = done.cards.concat(list.cards);
+          list.cards = [];
+          logAct("move", "Moved all cards from “" + list.title + "” to “" + done.title + "”");
+          render();
+          offerUndo("Moved all cards to “" + done.title + "”", snap);
+        }},
+        {sep:true},
+        {icon:"🗑", label:"Delete list (" + list.cards.length + ")", danger:true, onClick:function(){ deleteList(listId); }}
+      ]);
+    });
+  });
+
+  Array.prototype.forEach.call($lists.querySelectorAll("[data-addcard]"), function(btn){
+    btn.addEventListener("click", function(){ openComposer(btn.getAttribute("data-addcard")); });
+  });
+
+  Array.prototype.forEach.call($lists.querySelectorAll(".card"), function(el){
+    var cardId = el.getAttribute("data-card");
+    el.addEventListener("click", function(e){
+      if(Date.now() - suppressClickAt < 300) return;
+      openCardEditor(cardId);
+    });
+    el.addEventListener("keydown", function(e){
+      if(e.key === "Enter" || e.key === " "){ e.preventDefault(); openCardEditor(cardId); }
+    });
+    el.setAttribute("draggable", "true");
+    el.addEventListener("dragstart", function(e){
+      if(e.target.closest("[data-edit]")){ e.preventDefault(); return; }
+      onCardDragStart(e, cardId);
+    });
+    el.addEventListener("dragend", function(){ onCardDragEnd(el); });
+  });
+
+  Array.prototype.forEach.call($lists.querySelectorAll(".list"), wireDropList);
+
+  var mc = document.getElementById("matchClear");
+  if(mc) mc.addEventListener("click", clearFilters);
+}
+
+function openComposer(listId){
+  var b = board();
+  var list = b.lists.find(function(l){ return l.id === listId; });
+  if(!list) return;
+  var wrap = $lists.querySelector('[data-composer="' + listId + '"]');
+  if(!wrap) return;
+  wrap.innerHTML = '<textarea placeholder="Card title…" aria-label="Card title" rows="2"></textarea>'
+    + '<div class="row"><button type="button" class="btn-primary" data-commit>Add card</button>'
+    + '<button type="button" class="btn-ghost" data-cancel>Cancel</button></div>';
+  var ta = wrap.querySelector("textarea");
+  ta.focus();
+  function commit(){
+    var v = ta.value.trim();
+    if(!v){ ta.focus(); return; }
+    var newCard = {id:uid("c"), title:v, desc:"", due:"", label:"", assignee:"", checklist:[]};
+    list.cards.push(newCard);
+    logAct("create", "Created “" + v + "” in “" + list.title + "”");
+    lastListId = listId;
+    render();
+    landCard(newCard.id);
+    toast("Card added — open it to add details");
+    var again = $lists.querySelector('[data-addcard="' + listId + '"]');
+    if(again) openComposer(listId);
+  }
+  wrap.querySelector("[data-commit]").addEventListener("click", commit);
+  ta.addEventListener("keydown", function(e){ if(e.key === "Enter" && !e.shiftKey){ e.preventDefault(); commit(); } });
+  wrap.querySelector("[data-cancel]").addEventListener("click", renderLists);
+}
+
+function deleteList(listId){
+  var b = board();
+  var list = b.lists.find(function(l){ return l.id === listId; });
+  if(!list) return;
+  askConfirm("Delete list “" + list.title + "”?",
+    "The list and its " + plural(list.cards.length, "card") + " will be removed. You can undo for 5 seconds afterwards.",
+    function(){
+      var snap = snapshot();
+      b.lists = b.lists.filter(function(l){ return l.id !== listId; });
+      logAct("delete", "Deleted list “" + list.title + "” (" + plural(list.cards.length, "card") + ")");
+      render();
+      offerUndo("List “" + list.title + "” deleted", snap);
+    });
+}
+
+function landCard(cardId){
+  setTimeout(function(){
+    var el = $lists.querySelector('.card[data-card="' + cardId + '"]');
+    if(!el) return;
+    el.classList.add("just-landed");
+    setTimeout(function(){ el.classList.remove("just-landed"); }, 700);
+  }, 10);
+}
+
+/* ---------------- Popup menu ---------------- */
+var $menu = document.getElementById("listMenu");
+function closeMenu(){
+  $menu.classList.remove("open");
+  $menu.innerHTML = "";
+}
+document.addEventListener("click", function(e){
+  if($menu.classList.contains("open") && !$menu.contains(e.target)) closeMenu();
+});
+function openMenu(anchor, items){
+  var plain = items.filter(function(it){ return !it.sep; });
+  $menu.innerHTML = items.map(function(it){
+    if(it.sep) return '<div class="menu-sep" role="separator"></div>';
+    return '<button type="button" role="menuitem" class="' + (it.danger ? "danger" : "") + '" data-mi>'
+      + (it.icon ? '<span class="ico" aria-hidden="true">' + it.icon + '</span>' : '')
+      + esc(it.label) + '</button>';
+  }).join("");
+  $menu.classList.add("open");
+  var r = anchor.getBoundingClientRect();
+  var mw = $menu.offsetWidth, mh = $menu.offsetHeight;
+  var left = Math.max(8, Math.min(r.right - mw, window.innerWidth - mw - 8));
+  var top = r.bottom + 6;
+  if(top + mh > window.innerHeight - 8) top = Math.max(8, r.top - mh - 6);
+  $menu.style.left = left + "px";
+  $menu.style.top = top + "px";
+  var btns = $menu.querySelectorAll("[data-mi]");
+  Array.prototype.forEach.call(btns, function(btn, i){
+    btn.addEventListener("click", function(){
+      closeMenu();
+      if(plain[i] && plain[i].onClick) plain[i].onClick();
+    });
+  });
+  if(btns.length){
+    try{ btns[0].focus({preventScroll:true}); }catch(e){ btns[0].focus(); }
+  }
+}
+
+/* ---------------- Drag and drop (native HTML5 drag events) ---------------- */
+/*
+  Dragging is native HTML5 DnD. A card sets draggable="true"; dragstart stores
+  its id, dragover on a list paints the drop line, drop calls moveCardWithin(),
+  and dropping on a board tab calls moveCardToBoard(). Touch devices use the
+  Board / List selectors in the card editor instead (the brief's fallback).
+*/
+var suppressClickAt = 0;      /* swallow the click that follows a drop */
+var dragCardId = null;        /* the card being dragged, or null */
+var dropLine = null;          /* the 4px line showing where it will land */
+
+function clearDropUI(){
+  Array.prototype.forEach.call(document.querySelectorAll(".drag-over, .drop-target"), function(el){
+    el.classList.remove("drag-over", "drop-target");
+  });
+  if(dropLine && dropLine.parentNode) dropLine.remove();
+}
+
+function onCardDragStart(e, cardId){
+  dragCardId = cardId;
+  suppressClickAt = Date.now();
+  if(e.dataTransfer){
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", cardId);
+  }
+  var el = e.currentTarget;
+  /* Dim the source only after the browser has captured the drag image. */
+  setTimeout(function(){ el.classList.add("dragging"); }, 0);
+}
+
+function onCardDragEnd(el){
+  el.classList.remove("dragging");
+  dragCardId = null;
+  clearDropUI();
+}
+
+/* The card under the pointer, so the drop line can sit before it. */
+function afterIdIn(zone, y, ignoreId){
+  var cards = Array.prototype.slice.call(zone.querySelectorAll(".card:not(.filtered-out)"));
+  var found = cards.find(function(c){
+    if(c.getAttribute("data-card") === ignoreId) return false;
+    var r = c.getBoundingClientRect();
+    return y < r.top + r.height / 2;
+  });
+  return found ? found.getAttribute("data-card") : null;
+}
+
+function showListDrop(zone, y){
+  /* Reuse the same line while the pointer stays inside one list. */
+  if(!dropLine || dropLine.parentNode !== zone){
+    clearDropUI();
+    zone.classList.add("drag-over");
+    var listEl = zone.closest(".list");
+    if(listEl) listEl.classList.add("drop-target");
+    dropLine = document.createElement("div");
+    dropLine.className = "drop-line";
+    dropLine.setAttribute("aria-hidden", "true");
+  }
+  var afterId = afterIdIn(zone, y, dragCardId);
+  var afterEl = afterId ? zone.querySelector('.card[data-card="' + afterId + '"]') : null;
+  if(afterEl) zone.insertBefore(dropLine, afterEl);
+  else zone.appendChild(dropLine);
+}
+
+/* Keep the board, and a long list, scrolling while a card is held near an edge. */
+function dragAutoScroll(x, y, zone){
+  var r = $lists.getBoundingClientRect();
+  if(x > r.right - 70) $lists.scrollLeft += 18;
+  else if(x < r.left + 70) $lists.scrollLeft -= 18;
+  if(zone && zone.scrollHeight > zone.clientHeight){
+    var zr = zone.getBoundingClientRect();
+    if(y > zr.bottom - 36) zone.scrollTop += 12;
+    else if(y < zr.top + 36) zone.scrollTop -= 12;
+  }
+}
+
+/* A list is one drop surface: anywhere inside it drops into its card zone. */
+function wireDropList(listEl){
+  var zone = listEl.querySelector("[data-cards]");
+  if(!zone) return;
+  var listId = zone.getAttribute("data-cards");
+  listEl.addEventListener("dragover", function(e){
+    if(!dragCardId) return;
+    e.preventDefault();
+    if(e.dataTransfer) e.dataTransfer.dropEffect = "move";
+    dragAutoScroll(e.clientX, e.clientY, zone);
+    showListDrop(zone, e.clientY);
+  });
+  listEl.addEventListener("drop", function(e){
+    if(!dragCardId) return;
+    e.preventDefault();
+    var cardId = dragCardId;
+    var afterId = afterIdIn(zone, e.clientY, cardId);
+    var found = findCard(cardId);
+    clearDropUI();
+    dragCardId = null;
+    if(found) moveCardWithin(found.list.id, listId, cardId, afterId);
+  });
+}
+
+function moveCardWithin(fromListId, toListId, cardId, beforeCardId){
+  var b = board();
+  var from = b.lists.find(function(l){ return l.id === fromListId; });
+  var to = b.lists.find(function(l){ return l.id === toListId; });
+  if(!from || !to) return;
+  if(beforeCardId === cardId) beforeCardId = null;
+  var idx = from.cards.findIndex(function(c){ return c.id === cardId; });
+  if(idx < 0) return;
+  var sameList = from === to;
+  if(sameList){
+    var next = from.cards[idx + 1];
+    if((beforeCardId && next && next.id === beforeCardId) || (!beforeCardId && !next)) return;
+  }
+  var moved = from.cards.splice(idx, 1)[0];
+  var at = beforeCardId ? to.cards.findIndex(function(c){ return c.id === beforeCardId; }) : to.cards.length;
+  if(at < 0) at = to.cards.length;
+  to.cards.splice(at, 0, moved);
+  if(!sameList) logAct("move", "Moved “" + moved.title + "” from “" + from.title + "” to “" + to.title + "”");
+  render();
+  landCard(moved.id);
+  toast(sameList ? "Card reordered in “" + to.title + "”" : "Moved to “" + to.title + "”");
+}
+
+function moveCardToBoard(targetBoardId, cardId){
+  var source = board();
+  var target = boardById(targetBoardId);
+  if(!target || target.id === source.id) return;
+  var found = findCard(cardId, source);
+  if(!found) return;
+  var dest = target.lists.find(function(l){ return !isDoneList(l.title); }) || target.lists[0];
+  if(!dest){
+    dest = {id:uid("l"), title:"To Do", cards:[]};
+    target.lists.push(dest);
+  }
+  found.list.cards = found.list.cards.filter(function(c){ return c.id !== cardId; });
+  dest.cards.push(found.card);
+  logAct("move", "Moved “" + found.card.title + "” to board “" + target.name + "”", source);
+  logAct("move", "Received “" + found.card.title + "” from “" + source.name + "”", target);
+  render();
+  toast("Moved “" + found.card.title + "” to “" + target.name + "”");
+}
+
+/* ---------------- Overlay helpers ---------------- */
+var lastFocus = null;
+function openOverlay(el, focusSel){
+  lastFocus = document.activeElement;
+  var openCount = document.querySelectorAll(".overlay.open").length;
+  el.style.zIndex = String(60 + openCount * 2 + 1);
+  el.classList.add("open");
+  el.setAttribute("aria-hidden", "false");
+  document.body.classList.add("modal-open");
+  var f = focusSel ? el.querySelector(focusSel) : null;
+  f = f || el.querySelector("input:not([type=hidden]), textarea, select, button");
+  setTimeout(function(){ if(f && f.focus) f.focus(); }, 40);
+}
+function closeOverlay(el){
+  if(!el || !el.classList.contains("open")) return;
+  el.classList.remove("open");
+  el.setAttribute("aria-hidden", "true");
+  if(!document.querySelector(".overlay.open")) document.body.classList.remove("modal-open");
+  if(lastFocus && lastFocus.focus){ try{ lastFocus.focus(); }catch(e){} }
+}
+function anyOverlayOpen(){ return !!document.querySelector(".overlay.open"); }
+function closeTopOverlay(){
+  var open = Array.prototype.slice.call(document.querySelectorAll(".overlay.open"));
+  if(!open.length) return false;
+  open.sort(function(a, b){
+    return (parseInt(a.style.zIndex, 10) || 60) - (parseInt(b.style.zIndex, 10) || 60);
+  });
+  var el = open[open.length - 1];
+  closeOverlay(el);
+  if(el.id === "confirmOverlay") confirmCb = null;
+  return true;
+}
+
+/* ---------------- Archive ---------------- */
+var $archiveOverlay = document.getElementById("archiveOverlay");
+var $activityOverlay = document.getElementById("activityOverlay");
+
+function archiveCard(cardId){
+  var found = findCard(cardId);
+  if(!found) return;
+  var snap = snapshot();
+  found.list.cards = found.list.cards.filter(function(c){ return c.id !== cardId; });
+  board().archived.unshift({
+    card: found.card,
+    fromListId: found.list.id,
+    fromListTitle: found.list.title,
+    archivedAt: new Date().toISOString()
+  });
+  logAct("archive", "Archived “" + found.card.title + "” from “" + found.list.title + "”");
+  render();
+  offerUndo("“" + found.card.title + "” archived", snap);
+}
+
+function renderArchive(){
+  var b = board();
+  var wrap = document.getElementById("archiveBody");
+  if(!wrap) return;
+  if(!b.archived.length){
+    wrap.innerHTML = '<div class="empty-hint tall"><strong>Nothing archived</strong>'
+      + '<span>Archive a card from its editor to take it off the board without deleting it.</span></div>';
+    return;
+  }
+  wrap.innerHTML = '<div class="list-scroll">' + b.archived.map(function(a, i){
+    var checks = (a.card && a.card.checklist) || [];
+    var done = checks.filter(function(x){ return x.done; }).length;
+    return '<div class="archive-item"><div class="body">'
+      + '<div class="t">' + esc(a.card.title) + '</div>'
+      + '<div class="m">From “' + esc(a.fromListTitle || "unknown list") + '” · archived ' + timeAgo(a.archivedAt)
+      + (checks.length ? ' · ' + done + '/' + checks.length + ' checklist' : '')
+      + (a.card.due ? ' · due ' + esc(fmtDate(a.card.due)) : '')
+      + '</div>'
+      + '<div class="row-actions"><button type="button" class="btn-ghost" data-restore="' + i + '">Restore</button>'
+      + '<button type="button" class="btn-ghost" data-purge="' + i + '">Delete forever</button></div>'
+      + '</div></div>';
+  }).join("") + '</div>';
+
+  Array.prototype.forEach.call(wrap.querySelectorAll("[data-restore]"), function(btn){
+    btn.addEventListener("click", function(){ restoreArchived(parseInt(btn.getAttribute("data-restore"), 10)); });
+  });
+  Array.prototype.forEach.call(wrap.querySelectorAll("[data-purge]"), function(btn){
+    btn.addEventListener("click", function(){ purgeArchived(parseInt(btn.getAttribute("data-purge"), 10)); });
+  });
+}
+
+function restoreArchived(i){
+  var b = board();
+  var entry = b.archived[i];
+  if(!entry) return;
+  var dest = b.lists.find(function(l){ return l.id === entry.fromListId; })
+    || b.lists.find(function(l){ return !isDoneList(l.title); }) || b.lists[0];
+  if(!dest){
+    dest = {id:uid("l"), title:"Restored", cards:[]};
+    b.lists.push(dest);
+  }
+  dest.cards.push(entry.card);
+  b.archived.splice(i, 1);
+  logAct("restore", "Restored “" + entry.card.title + "” to “" + dest.title + "”");
+  render();
+  renderArchive();
+  renderActivity();
+  toast("Card restored to “" + dest.title + "”");
+}
+
+function purgeArchived(i){
+  var b = board();
+  var entry = b.archived[i];
+  if(!entry) return;
+  askConfirm("Delete “" + entry.card.title + "” forever?", "This archived card will be removed permanently. This cannot be undone.", function(){
+    var snap = snapshot();
+    b.archived.splice(i, 1);
+    logAct("delete", "Permanently deleted archived card “" + entry.card.title + "”");
+    render();
+    renderArchive();
+    offerUndo("Archived card deleted", snap);
+  });
+}
+
+function openArchive(){
+  renderArchive();
+  openOverlay($archiveOverlay);
+}
+
+/* ---------------- Activity ---------------- */
+var ACT_ICONS = {create:"＋", move:"→", edit:"✎", archive:"▣", restore:"↺", delete:"🗑"};
+function renderActivity(){
+  var b = board();
+  var wrap = document.getElementById("activityBody");
+  var sub = document.getElementById("activitySub");
+  if(!wrap) return;
+  if(sub) sub.textContent = b.activity.length ? "Newest first · " + b.activity.length + " events on this board" : "This board has no activity yet.";
+  if(!b.activity.length){
+    wrap.innerHTML = '<div class="empty-hint tall"><strong>No activity yet</strong>'
+      + '<span>Create, move, edit or archive a card and it will show up here.</span></div>';
+    return;
+  }
+  wrap.innerHTML = '<div class="list-scroll">' + b.activity.map(function(a){
+    return '<div class="act-item" data-type="' + esc(a.type) + '">'
+      + '<span class="ico" aria-hidden="true">' + (ACT_ICONS[a.type] || "•") + '</span>'
+      + '<div class="body"><div class="t">' + esc(a.text) + '</div>'
+      + '<div class="when"><span title="' + esc(fmtDateTime(a.at)) + '">' + timeAgo(a.at) + '</span>'
+      + '<span>· ' + esc(fmtDateTime(a.at)) + '</span></div></div></div>';
+  }).join("") + '</div>';
+}
+function openActivity(){
+  renderActivity();
+  openOverlay($activityOverlay);
+}
+
+/* ---------------- Summary ---------------- */
+function buildSummaryData(b){
+  var items = allCards(b);
+  var total = items.length;
+  var overdue = [], soon = [], unassigned = [];
+  var t = todayISO(), soonLimit = dISO(2);
+  items.forEach(function(it){
+    var c = it.card, done = isDoneList(it.list.title);
+    if(!c.assignee) unassigned.push(it);
+    if(c.due && !done){
+      if(c.due < t) overdue.push(it);
+      else if(c.due <= soonLimit) soon.push(it);
+    }
+  });
+  overdue.sort(function(a, b2){ return a.card.due < b2.card.due ? -1 : 1; });
+  soon.sort(function(a, b2){ return a.card.due < b2.card.due ? -1 : 1; });
+  var busiest = null;
+  b.lists.forEach(function(l){ if(!busiest || l.cards.length > busiest.cards.length) busiest = l; });
+  var doneList = b.lists.find(function(l){ return isDoneList(l.title); });
+  var doneCount = doneList ? doneList.cards.length : 0;
+  var pct = total ? Math.round(doneCount / total * 100) : 0;
+  var maxList = Math.max(1, busiest ? busiest.cards.length : 0);
+  return {total:total, overdue:overdue, soon:soon, unassigned:unassigned, busiest:busiest, doneCount:doneCount, pct:pct, maxList:maxList};
+}
+function nextActionText(b, s){
+  if(s.total === 0) return "This board is empty. Add a first list and card to get “" + b.name + "” moving.";
+  if(s.overdue.length){
+    var top = s.overdue[0];
+    var extra = (s.overdue.length > 1 ? " (+ " + (s.overdue.length - 1) + " more overdue)" : "")
+      + (s.unassigned.length ? ", and " + plural(s.unassigned.length, "card") + (s.unassigned.length === 1 ? " still needs" : " still need") + " an owner" : "");
+    return plural(s.overdue.length, "card") + " overdue, " + s.unassigned.length + " unassigned — start with “" + top.card.title + "” in " + top.list.title + " (due " + fmtDate(top.card.due) + ")" + extra + ".";
+  }
+  if(s.soon.length){
+    var t2 = s.soon[0];
+    return "Nothing overdue — good shape. Next up: “" + t2.card.title + "” is due " + (t2.card.due === todayISO() ? "today" : fmtDate(t2.card.due)) + " in " + t2.list.title + ". Clear that before it slips.";
+  }
+  if(s.unassigned.length){
+    var u = s.unassigned[0];
+    return "No deadline pressure right now. Assign an owner to “" + u.card.title + "” (" + u.list.title + ") — " + plural(s.unassigned.length, "card") + (s.unassigned.length === 1 ? " is" : " are") + " unassigned, and unowned work is what stalls.";
+  }
+  if(s.busiest && s.busiest.cards.length >= 3 && !isDoneList(s.busiest.title)){
+    return "All dated work is on track. “" + s.busiest.title + "” is your bottleneck with " + s.busiest.cards.length + " cards — pull one card forward or split the list.";
+  }
+  return "Board is healthy: " + s.doneCount + " of " + s.total + " cards done (" + s.pct + "%). Keep the current pace and review the board again tomorrow.";
+}
+function attnItem(it, tagClass, tagText){
+  return '<li><button type="button" class="attn-link" data-open-card="' + it.card.id + '">'
+    + '<span class="tag ' + tagClass + '">' + tagText + '</span>'
+    + '<span><span class="t">' + esc(it.card.title) + '</span><br><span class="m">' + esc(it.list.title)
+    + (it.card.due ? " · due " + fmtDate(it.card.due) : "") + (it.card.assignee ? " · " + esc(it.card.assignee) : " · no owner") + '</span></span></button></li>';
+}
+function renderSummary(){
+  var b = board();
+  var s = buildSummaryData(b);
+  var h = "";
+  h += '<div class="stat-grid">'
+    + '<div class="stat"><div class="n">' + s.total + '</div><div class="l">Total cards</div></div>'
+    + '<div class="stat green"><div class="n">' + s.pct + '%</div><div class="l">Complete</div></div>'
+    + '<div class="stat red"><div class="n">' + s.overdue.length + '</div><div class="l">Overdue</div></div>'
+    + '<div class="stat amber"><div class="n">' + s.soon.length + '</div><div class="l">Due in 2 days</div></div>'
+    + '<div class="stat"><div class="n">' + s.unassigned.length + '</div><div class="l">Unassigned</div></div>'
+    + '<div class="stat"><div class="n">' + b.lists.length + '</div><div class="l">Lists</div></div>'
+    + '</div>';
+  h += '<div class="next-action"><div class="k">Suggested next action</div><p>' + esc(nextActionText(b, s)) + '</p>'
+    + (s.overdue.length || s.soon.length ? '<button type="button" class="btn-primary" id="jumpNext">Open that card</button>' : '')
+    + '</div>';
+  h += '<div class="progress-wrap"><div class="progress-track"><div class="progress-fill" style="width:' + s.pct + '%"></div></div>'
+    + '<div class="progress-lbl">' + s.doneCount + ' of ' + s.total + ' cards in the done list'
+    + (s.busiest ? ' · Busiest list: <strong>' + esc(s.busiest.title) + '</strong> (' + s.busiest.cards.length + ')' : '') + '</div></div>';
+  h += '<h3>Cards per list</h3>';
+  b.lists.forEach(function(l){
+    h += '<div class="bar-row"><span class="nm" title="' + esc(l.title) + '">' + esc(l.title) + '</span>'
+      + '<span class="bar-track"><span class="bar-fill" style="width:' + Math.round(l.cards.length / s.maxList * 100) + '%"></span></span>'
+      + '<span class="ct">' + l.cards.length + '</span></div>';
+  });
+  h += '<h3>Needs attention</h3>';
+  var attn = [], seenAttn = {};
+  function pushAttn(it, tagClass, tagText){
+    if(seenAttn[it.card.id]) return;
+    seenAttn[it.card.id] = true;
+    attn.push(attnItem(it, tagClass, tagText));
+  }
+  s.overdue.slice(0, 4).forEach(function(it){ pushAttn(it, "overdue", "OVERDUE"); });
+  s.soon.slice(0, 3).forEach(function(it){ pushAttn(it, "soon", "DUE SOON"); });
+  s.unassigned.slice(0, 3).forEach(function(it){ pushAttn(it, "unassigned", "NO OWNER"); });
+  h += attn.length ? '<ul class="attn">' + attn.join("") + '</ul>' : '<p class="none-note">Nothing needs attention — no overdue, due-soon or unassigned cards.</p>';
+  $summary.innerHTML = h;
+
+  var jump = document.getElementById("jumpNext");
+  if(jump){
+    var target = (s.overdue[0] || s.soon[0]);
+    jump.addEventListener("click", function(){ if(target) openCardEditor(target.card.id); });
+  }
+  Array.prototype.forEach.call($summary.querySelectorAll("[data-open-card]"), function(btn){
+    btn.addEventListener("click", function(){ openCardEditor(btn.getAttribute("data-open-card")); });
+  });
+}
+
+/* ---------------- Card editor ---------------- */
+var $cardOverlay = document.getElementById("cardOverlay");
+var selLabels = [];
+var draftChecklist = [];
+var editingCardId = null;
+
+function renderLabelSwatches(){
+  var wrap = document.getElementById("fLabels");
+  if(!wrap) return;
+  var none = selLabels.length === 0;
+  var html = '<button type="button" class="swatch none' + (none ? " on" : "") + '" data-lbl="" aria-pressed="' + none + '">None</button>';
+  LABELS.forEach(function(l){
+    var on = selLabels.indexOf(l.name) >= 0;
+    html += '<button type="button" class="swatch' + (on ? " on" : "") + '" data-lbl="' + esc(l.name) + '"'
+      + ' style="background:' + l.color + '" title="' + esc(l.name) + '" aria-label="Toggle label ' + esc(l.name) + '"'
+      + ' aria-pressed="' + on + '"></button>';
+  });
+  wrap.innerHTML = html;
+  Array.prototype.forEach.call(wrap.querySelectorAll("[data-lbl]"), function(btn){
+    btn.addEventListener("click", function(){
+      var name = btn.getAttribute("data-lbl");
+      if(!name){
+        selLabels = [];
+      } else {
+        var i = selLabels.indexOf(name);
+        if(i >= 0) selLabels.splice(i, 1);
+        else selLabels.push(name);
+      }
+      renderLabelSwatches();
+    });
+  });
+}
+
+function refreshCkProgress(){
+  var wrap = document.getElementById("fChecklist");
+  if(!wrap) return;
+  var done = draftChecklist.filter(function(i){ return i.done; }).length;
+  var total = draftChecklist.length;
+  var bar = wrap.querySelector(".ck-progress .ck-bar i");
+  var count = wrap.querySelector(".ck-progress .ck-count");
+  if(bar) bar.style.width = (total ? Math.round(done/total*100) : 0) + "%";
+  if(count) count.textContent = done + "/" + total;
+}
+
+function renderChecklistEditor(){
+  var wrap = document.getElementById("fChecklist");
+  if(!wrap) return;
+  var done = draftChecklist.filter(function(i){ return i.done; }).length;
+  var total = draftChecklist.length;
+  var pct = total ? Math.round(done/total*100) : 0;
+  var h = '<div class="ck-progress"><span class="ck-bar"><i style="width:' + pct + '%"></i></span>'
+    + '<span class="ck-count">' + done + '/' + total + '</span></div>';
+  if(total){
+    h += '<ul class="ck-list">' + draftChecklist.map(function(it, i){
+      return '<li class="ck-item' + (it.done ? " done" : "") + '">'
+        + '<label><input type="checkbox" data-ck-toggle="' + i + '"' + (it.done ? " checked" : "") + '>'
+        + '<span class="ck-text">' + esc(it.text) + '</span></label>'
+        + '<button type="button" class="ck-del" data-ck-del="' + i + '" aria-label="Remove checklist item">×</button></li>';
+    }).join("") + '</ul>';
+  } else {
+    h += '<div class="field-hint tight">Break the card into steps — the card shows a progress bar like 2/5.</div>';
+  }
+  h += '<div class="ck-add"><input id="ckInput" type="text" placeholder="Add a checklist item…" aria-label="New checklist item" autocomplete="off" />'
+    + '<button type="button" class="btn-ghost" id="ckAddBtn">Add</button></div>';
+  wrap.innerHTML = h;
+
+  Array.prototype.forEach.call(wrap.querySelectorAll("[data-ck-toggle]"), function(box){
+    box.addEventListener("change", function(){
+      var i = parseInt(box.getAttribute("data-ck-toggle"), 10);
+      if(!draftChecklist[i]) return;
+      draftChecklist[i].done = box.checked;
+      var li = box.closest(".ck-item");
+      if(li) li.classList.toggle("done", box.checked);
+      refreshCkProgress();
+    });
+  });
+  Array.prototype.forEach.call(wrap.querySelectorAll("[data-ck-del]"), function(btn){
+    btn.addEventListener("click", function(){
+      var i = parseInt(btn.getAttribute("data-ck-del"), 10);
+      draftChecklist.splice(i, 1);
+      renderChecklistEditor();
+      var inp = document.getElementById("ckInput");
+      if(inp) inp.focus();
+    });
+  });
+  var inp = document.getElementById("ckInput");
+  var addBtn = document.getElementById("ckAddBtn");
+  function addItem(){
+    var v = inp.value.trim();
+    if(!v){ inp.focus(); return; }
+    draftChecklist.push({id:uid("k"), text:v, done:false});
+    renderChecklistEditor();
+    var again = document.getElementById("ckInput");
+    if(again) again.focus();
+  }
+  if(addBtn) addBtn.addEventListener("click", addItem);
+  if(inp) inp.addEventListener("keydown", function(e){ if(e.key === "Enter"){ e.preventDefault(); addItem(); } });
+}
+
+function fillListSelect(boardId, selectedListId){
+  var sel = document.getElementById("fList");
+  var b = boardById(boardId);
+  if(!sel || !b) return;
+  sel.innerHTML = b.lists.length
+    ? b.lists.map(function(l){ return '<option value="' + l.id + '"' + (l.id === selectedListId ? " selected" : "") + '>' + esc(l.title) + '</option>'; }).join("")
+    : '<option value="">New “To Do” list</option>';
+}
+
+function openCardEditor(cardId){
+  var found = findCard(cardId);
+  if(!found) return;
+  editingCardId = cardId;
+  editingCard = {listId:found.list.id, cardId:cardId, boardId:found.board.id};
+  selLabels = (found.card.labels || []).slice();
+  draftChecklist = clone(found.card.checklist || []);
+  lastListId = found.list.id;
+
+  document.getElementById("fTitle").value = found.card.title;
+  document.getElementById("fDesc").value = found.card.desc || "";
+  document.getElementById("fDue").value = found.card.due || "";
+  document.getElementById("fAssignee").value = found.card.assignee || "";
+
+  var bsel = document.getElementById("fBoard");
+  bsel.innerHTML = state.boards.map(function(b){
+    return '<option value="' + b.id + '"' + (b.id === found.board.id ? " selected" : "") + '>' + esc(b.name) + '</option>';
+  }).join("");
+  fillListSelect(found.board.id, found.list.id);
+
+  var err = document.getElementById("cardFormError");
+  if(err) err.textContent = "";
+
+  renderLabelSwatches();
+  renderChecklistEditor();
+  openOverlay($cardOverlay, "#fTitle");
+}
+
+function saveCardEditor(){
+  if(!editingCardId) return;
+  var found = findCard(editingCardId);
+  if(!found){ closeOverlay($cardOverlay); return; }
+  var titleEl = document.getElementById("fTitle");
+  var title = titleEl.value.trim();
+  if(!title){
+    var err = document.getElementById("cardFormError");
+    if(err) err.textContent = "Give the card a title before saving.";
+    titleEl.focus();
+    return;
+  }
+  var desc = document.getElementById("fDesc").value.trim();
+  var due = document.getElementById("fDue").value || "";
+  var assignee = document.getElementById("fAssignee").value.trim().slice(0, 60);
+  var targetBoardId = document.getElementById("fBoard").value;
+  var targetListId = document.getElementById("fList").value;
+
+  var changes = [];
+  if(found.card.title !== title) changes.push("title");
+  if((found.card.desc || "") !== desc) changes.push("description");
+  if((found.card.due || "") !== due) changes.push("due date");
+  if((found.card.assignee || "") !== assignee) changes.push("assignee");
+  if(!sameLabels(found.card.labels || [], selLabels)) changes.push("labels");
+  var ckChanged = JSON.stringify((found.card.checklist || []).map(function(i){ return [i.text, i.done]; }))
+    !== JSON.stringify(draftChecklist.map(function(i){ return [i.text, i.done]; }));
+  if(ckChanged) changes.push("checklist");
+
+  found.card.title = title;
+  found.card.desc = desc;
+  found.card.due = due;
+  found.card.assignee = assignee;
+  found.card.labels = selLabels.slice();
+  found.card.checklist = draftChecklist.filter(function(i){ return String(i.text||"").trim() !== ""; });
+
+  var targetBoard = boardById(targetBoardId) || found.board;
+  if(targetBoard !== found.board && targetBoard.lists.length === 0){
+    targetBoard.lists.push({id:uid("l"), title:"To Do", cards:[]});
+    targetListId = targetBoard.lists[0].id;
+  }
+  var targetList = targetBoard.lists.find(function(l){ return l.id === targetListId; });
+  var moved = !!(targetList && (targetBoard !== found.board || targetList !== found.list));
+
+  if(moved){
+    found.list.cards = found.list.cards.filter(function(c){ return c.id !== found.card.id; });
+    targetList.cards.push(found.card);
+    logAct("move", "Moved “" + found.card.title + "” from “" + found.list.title + "” to “" + targetList.title + "”", found.board);
+    if(targetBoard !== found.board){
+      logAct("move", "Received “" + found.card.title + "” from board “" + found.board.name + "”", targetBoard);
+    }
+  }
+  if(changes.length || ckChanged){
+    logAct("edit", "Edited “" + found.card.title + "” (" + Array.from(new Set(changes)).join(", ") + ")", found.board);
+  }
+
+  closeOverlay($cardOverlay);
+  if(targetBoard !== found.board) state.activeBoardId = targetBoard.id;
+  editingCard = null;
+  editingCardId = null;
+  render();
+  landCard(found.card.id);
+  toast(moved ? "Card moved to “" + (targetList ? targetList.title : targetBoard.name) + "”" : "Card saved");
+}
+
+function startCardDelete(){
+  if(!editingCardId) return;
+  var found = findCard(editingCardId);
+  if(!found) return;
+  var cardId = editingCardId;
+  var title = found.card.title;
+  closeOverlay($cardOverlay);
+  askConfirm("Delete “" + title + "”?", "The card is removed from this board. You can undo for 5 seconds afterwards.", function(){
+    var f2 = findCard(cardId);
+    if(!f2) return;
+    var snap = snapshot();
+    f2.list.cards = f2.list.cards.filter(function(c){ return c.id !== cardId; });
+    logAct("delete", "Deleted “" + title + "” from “" + f2.list.title + "”");
+    render();
+    offerUndo("Card “" + title + "” deleted", snap);
+  });
+}
+
+/* ---------------- Board create / rename / duplicate ---------------- */
+var $boardOverlay = document.getElementById("boardOverlay");
+var lastListId = null;
+
+function openBoardModal(mode){
+  boardModalMode = mode;
+  document.getElementById("boardModalTitle").textContent = mode === "create" ? "New board" : "Rename board";
+  document.getElementById("fBoardName").value = mode === "create" ? "" : board().name;
+  var tf = document.getElementById("boardTemplateField");
+  if(tf) tf.hidden = mode !== "create";
+  var ts = document.getElementById("fBoardTemplate");
+  if(ts) ts.value = "blank";
+  openOverlay($boardOverlay, "#fBoardName");
+  setTimeout(function(){
+    var inp = document.getElementById("fBoardName");
+    inp.focus(); inp.select();
+  }, 40);
+}
+function saveBoardModal(){
+  var inp = document.getElementById("fBoardName");
+  var v = inp.value.trim();
+  if(!v){ inp.focus(); return; }
+  if(boardModalMode === "create"){
+    var tmpl = templateById((document.getElementById("fBoardTemplate") || {}).value || "blank");
+    var nb = normalizeBoard({name:v, lists:tmpl.build(), archived:[], activity:[]}, false);
+    nb.activity = [act("create", "Created board “" + v + "” from the “" + tmpl.name + "” template", 0)];
+    state.boards.push(nb);
+    state.activeBoardId = nb.id;
+    searchQuery = "";
+    activeFilter = {kind:"all", value:""};
+    var si = document.getElementById("searchInput");
+    if(si) si.value = "";
+    closeOverlay($boardOverlay);
+    render({enter:true});
+    toast("Board “" + v + "” created");
+  } else {
+    var oldName = board().name;
+    board().name = v;
+    logAct("edit", "Renamed board from “" + oldName + "” to “" + v + "”");
+    closeOverlay($boardOverlay);
+    render();
+    toast("Board renamed");
+  }
+}
+
+function copyCard(c){
+  var cc = clone(c);
+  cc.id = uid("c");
+  cc.checklist = (cc.checklist || []).map(function(i){ return {id:uid("k"), text:i.text, done:!!i.done}; });
+  return cc;
+}
+function duplicateBoard(){
+  var src = board();
+  var copy = {
+    id: uid("b"),
+    name: src.name + " (copy)",
+    lists: src.lists.map(function(l){
+      return {id:uid("l"), title:l.title, cards:l.cards.map(copyCard)};
+    }),
+    archived: src.archived.map(function(a){
+      return {card:copyCard(a.card), fromListId:null, fromListTitle:a.fromListTitle, archivedAt:a.archivedAt};
+    }),
+    activity: [act("create", "Board duplicated from “" + src.name + "”", 0)]
+  };
+  state.boards.push(normalizeBoard(copy, false));
+  state.activeBoardId = copy.id;
+  searchQuery = "";
+  activeFilter = {kind:"all", value:""};
+  var si = document.getElementById("searchInput");
+  if(si) si.value = "";
+  render({enter:true});
+  toast("Duplicated as “" + copy.name + "”");
+}
+
+function deleteBoard(){
+  if(state.boards.length <= 1){ toast("You need at least one board"); return; }
+  var b = board();
+  var n = allCards(b).length;
+  askConfirm("Delete board “" + b.name + "”?", "This removes the board, its " + b.lists.length + " lists and " + n + " cards. This cannot be undone.", function(){
+    state.boards = state.boards.filter(function(x){ return x.id !== b.id; });
+    state.activeBoardId = state.boards[0].id;
+    render({enter:true});
+    toast("Board deleted");
+  });
+}
+
+/* ---------------- Export / import ---------------- */
+function exportBoard(){
+  var b = board();
+  var payload = {app:"atomic-boards", version:STORE_VERSION, exportedAt:new Date().toISOString(), board:b};
+  var blob = new Blob([JSON.stringify(payload, null, 2)], {type:"application/json"});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement("a");
+  a.href = url;
+  a.download = slug(b.name) + ".json";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(function(){ URL.revokeObjectURL(url); }, 5000);
+  toast("Exported “" + b.name + "” as JSON");
+}
+
+function importBoardFile(file){
+  var reader = new FileReader();
+  reader.onload = function(){
+    try{
+      var data = JSON.parse(String(reader.result));
+      var raws = [];
+      if(data && data.board) raws = [data.board];
+      else if(data && Array.isArray(data.boards)) raws = data.boards;
+      else if(data && Array.isArray(data.lists)) raws = [data];
+      if(!raws.length) throw new Error("no board found in that file");
+      var added = raws.slice(0, 10).map(function(raw){ return normalizeBoard(raw, true); });
+      state.boards = state.boards.concat(added);
+      state.activeBoardId = added[0].id;
+      searchQuery = "";
+      activeFilter = {kind:"all", value:""};
+      var si = document.getElementById("searchInput");
+      if(si) si.value = "";
+      logAct("create", "Imported board from JSON", added[0]);
+      render({enter:true});
+      toast(added.length === 1 ? "Board imported" : added.length + " boards imported");
+    }catch(err){
+      toast("Import failed: " + (err && err.message ? err.message : "invalid JSON"));
+    }
+  };
+  reader.onerror = function(){ toast("Could not read that file"); };
+  reader.readAsText(file);
+}
+
+/* ---------------- Confirm ---------------- */
+var $confirm = document.getElementById("confirmOverlay");
+function askConfirm(title, text, cb){
+  document.getElementById("confirmTitle").textContent = title;
+  document.getElementById("confirmText").textContent = text;
+  confirmCb = cb;
+  openOverlay($confirm);
+}
+
+/* ---------------- Search, summary panel, reset ---------------- */
+var panel = document.getElementById("summaryPanel");
+var summaryBtn = document.getElementById("summaryToggle");
+function syncSummaryBtn(){ summaryBtn.setAttribute("aria-expanded", String(!panel.classList.contains("hidden"))); }
+if(window.innerWidth <= 860) panel.classList.add("hidden");
+syncSummaryBtn();
+var panelUserToggled = false;
+summaryBtn.addEventListener("click", function(){
+  panelUserToggled = true;
+  panel.classList.toggle("hidden");
+  syncSummaryBtn();
+});
+var summaryClose = document.getElementById("summaryClose");
+if(summaryClose) summaryClose.addEventListener("click", function(){
+  panelUserToggled = true;
+  panel.classList.add("hidden");
+  syncSummaryBtn();
+});
+window.addEventListener("resize", function(){
+  if(panelUserToggled) return;
+  if(window.innerWidth > 860) panel.classList.remove("hidden");
+  else panel.classList.add("hidden");
+  syncSummaryBtn();
+});
+
+function focusSearch(){
+  var si = document.getElementById("searchInput");
+  if(!si) return;
+  si.focus();
+  si.select();
+}
+function newCardShortcut(){
+  var b = board();
+  if(!b.lists.length){
+    var form = document.getElementById("emptyAddListForm");
+    if(form){
+      form.scrollIntoView({block:"center"});
+      var inp = document.getElementById("emptyListName");
+      if(inp) inp.focus();
+    }
+    return;
+  }
+  var target = b.lists.find(function(l){ return l.id === lastListId; }) || b.lists[0];
+  openComposer(target.id);
+  var wrap = $lists.querySelector('[data-composer="' + target.id + '"]');
+  if(wrap){
+    var ta = wrap.querySelector("textarea");
+    if(ta){
+      ta.scrollIntoView({block:"nearest", inline:"center", behavior:"smooth"});
+      ta.focus();
+    }
+  }
+}
+
+/* ---------------- Wiring: static controls ---------------- */
+function startBoardTitleEdit(){
+  var b = board();
+  var input = document.createElement("input");
+  input.className = "board-title-input";
+  input.value = b.name;
+  input.setAttribute("aria-label", "Board name");
+  $title.style.display = "none";
+  $title.parentNode.insertBefore(input, $title.nextSibling);
+  input.focus();
+  input.select();
+  var done = false;
+  function commit(saveIt){
+    if(done) return;
+    done = true;
+    var v = input.value.trim();
+    if(saveIt && v && v !== b.name){
+      logAct("edit", "Renamed board from “" + b.name + "” to “" + v + "”");
+      b.name = v;
+    }
+    input.remove();
+    $title.style.display = "";
+    render();
+  }
+  input.addEventListener("blur", function(){ commit(true); });
+  input.addEventListener("keydown", function(e){
+    if(e.key === "Enter"){ e.preventDefault(); commit(true); }
+    if(e.key === "Escape"){ e.preventDefault(); commit(false); }
+  });
+}
+
+function wireStaticControls(){
+  document.getElementById("newBoardBtn").addEventListener("click", function(){ openBoardModal("create"); });
+
+  $title.addEventListener("click", startBoardTitleEdit);
+  $title.addEventListener("keydown", function(e){
+    if(e.key === "Enter" || e.key === " "){ e.preventDefault(); startBoardTitleEdit(); }
+  });
+
+  $toastUndo.addEventListener("click", function(){
+    var fn = toastUndoFn;
+    hideToast();
+    if(fn) fn();
+  });
+
+  Array.prototype.forEach.call(document.querySelectorAll("[data-close-overlay]"), function(btn){
+    btn.addEventListener("click", function(){
+      closeOverlay(document.getElementById(btn.getAttribute("data-close-overlay")));
+    });
+  });
+  document.getElementById("boardCancelBtn").addEventListener("click", function(){ closeOverlay($boardOverlay); });
+  document.getElementById("boardSaveBtn").addEventListener("click", saveBoardModal);
+  document.getElementById("fBoardName").addEventListener("keydown", function(e){
+    if(e.key === "Enter"){ e.preventDefault(); saveBoardModal(); }
+  });
+
+  document.getElementById("addListBtn").addEventListener("click", function(){
+    var btn = document.getElementById("addListBtn2");
+    if(btn){ btn.click(); btn.scrollIntoView({behavior:"smooth", inline:"end", block:"nearest"}); }
+  });
+
+  var archiveBtn = document.getElementById("archiveBtn");
+  if(archiveBtn) archiveBtn.addEventListener("click", openArchive);
+
+  var boardMenuBtn = document.getElementById("boardMenuBtn");
+  if(boardMenuBtn) boardMenuBtn.addEventListener("click", function(e){
+    e.stopPropagation();
+    var count = board().archived.length;
+    openMenu(boardMenuBtn, [
+      {icon:"✎", label:"Rename board", onClick:function(){ openBoardModal("rename"); }},
+      {icon:"⧉", label:"Duplicate board", onClick:duplicateBoard},
+      {icon:"＋", label:"New board from template…", onClick:function(){ openBoardModal("create"); }},
+      {sep:true},
+      {icon:"▣", label:"Archived cards (" + count + ")", onClick:openArchive},
+      {icon:"≡", label:"Activity log", onClick:openActivity},
+      {sep:true},
+      {icon:"↓", label:"Export board as JSON", onClick:exportBoard},
+      {icon:"↑", label:"Import board JSON…", onClick:function(){ document.getElementById("importFile").click(); }},
+      {sep:true},
+      {icon:"🗑", label:"Delete board", danger:true, onClick:deleteBoard}
+    ]);
+  });
+
+  document.getElementById("searchInput").addEventListener("input", function(e){
+    searchQuery = e.target.value.trim();
+    renderLists();
+    renderFilters();
+    save();
+  });
+
+  var importFile = document.getElementById("importFile");
+  if(importFile) importFile.addEventListener("change", function(){
+    if(importFile.files && importFile.files[0]) importBoardFile(importFile.files[0]);
+    importFile.value = "";
+  });
+
+  var resetBtn = document.getElementById("resetBtn");
+  if(resetBtn) resetBtn.addEventListener("click", function(){
+    askConfirm("Reset demo data?", "All boards will be replaced with the original sample boards. Your changes will be lost.", function(){
+      try{ localStorage.removeItem(LS_KEY); }catch(e){}
+      state = seed();
+      state.boards = state.boards.map(function(b){ return normalizeBoard(b, false); });
+      state.activeBoardId = state.boards[0].id;
+      searchQuery = "";
+      activeFilter = {kind:"all", value:""};
+      var si = document.getElementById("searchInput");
+      if(si) si.value = "";
+      render({enter:true});
+      toast("Demo data restored");
+    });
+  });
+
+  document.getElementById("confirmCancelBtn").addEventListener("click", function(){
+    closeOverlay($confirm);
+    confirmCb = null;
+  });
+  document.getElementById("confirmOkBtn").addEventListener("click", function(){
+    var cb = confirmCb;
+    confirmCb = null;
+    closeOverlay($confirm);
+    if(cb) cb();
+  });
+
+  document.getElementById("cardCancelBtn").addEventListener("click", function(){ closeOverlay($cardOverlay); });
+  document.getElementById("cardSaveBtn").addEventListener("click", saveCardEditor);
+  document.getElementById("cardDeleteBtn").addEventListener("click", startCardDelete);
+  var cardArchiveBtn = document.getElementById("cardArchiveBtn");
+  if(cardArchiveBtn) cardArchiveBtn.addEventListener("click", function(){
+    var id = editingCardId;
+    if(!id) return;
+    closeOverlay($cardOverlay);
+    archiveCard(id);
+  });
+
+  var fBoard = document.getElementById("fBoard");
+  if(fBoard) fBoard.addEventListener("change", function(){
+    var b = boardById(fBoard.value);
+    fillListSelect(fBoard.value, b && b.lists[0] ? b.lists[0].id : "");
+  });
+
+  Array.prototype.forEach.call(document.querySelectorAll(".overlay"), function(ov){
+    ov.addEventListener("click", function(e){
+      if(e.target !== ov) return;
+      if(ov.id === "confirmOverlay") confirmCb = null;
+      closeOverlay(ov);
+    });
+  });
+
+  var dl = document.getElementById("peopleList");
+  if(dl){
+    dl.innerHTML = PEOPLE.map(function(p){ return '<option value="' + esc(p) + '"></option>'; }).join("");
+  }
+}
+
+/* ---------------- Keyboard shortcuts ---------------- */
+function isTypingTarget(el){
+  if(!el) return false;
+  var tag = (el.tagName || "").toLowerCase();
+  return tag === "input" || tag === "textarea" || tag === "select" || el.isContentEditable;
+}
+document.addEventListener("keydown", function(e){
+  if(e.key === "Escape"){
+    if($menu.classList.contains("open")){ closeMenu(); return; }
+    if(anyOverlayOpen()){ closeTopOverlay(); return; }
+    if(isTypingTarget(e.target)){ e.target.blur(); return; }
+    if(hasFilters()){ clearFilters(); toast("Filters cleared"); }
+    return;
+  }
+  if(e.key === "Tab" && anyOverlayOpen()){
+    var ov = document.querySelector(".overlay.open");
+    var nodes = ov.querySelectorAll('button:not([disabled]), [href], input:not([type="hidden"]):not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])');
+    var list = Array.prototype.filter.call(nodes, function(el){ return el.offsetParent !== null || el === document.activeElement; });
+    if(!list.length) return;
+    var first = list[0], last = list[list.length - 1];
+    if(e.shiftKey && document.activeElement === first){ e.preventDefault(); last.focus(); }
+    else if(!e.shiftKey && document.activeElement === last){ e.preventDefault(); first.focus(); }
+    return;
+  }
+  if(isTypingTarget(e.target)) return;
+  if(e.metaKey || e.ctrlKey || e.altKey) return;
+  if(e.key === "/"){ e.preventDefault(); focusSearch(); return; }
+  if(e.key === "n" || e.key === "N"){ e.preventDefault(); newCardShortcut(); return; }
+});
+
+/* ---------------- Theme ---------------- */
+var THEME_KEY = "atomic-boards-theme";
+var themeBtn = document.getElementById("themeToggle");
+function currentTheme(){ return document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light"; }
+function applyTheme(mode){
+  var dark = mode === "dark";
+  document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
+  if(themeBtn){
+    themeBtn.setAttribute("aria-pressed", dark ? "true" : "false");
+    themeBtn.setAttribute("aria-label", dark ? "Switch to light theme" : "Switch to dark theme");
+    themeBtn.title = dark ? "Switch to light theme" : "Switch to dark theme";
+  }
+  try{ localStorage.setItem(THEME_KEY, dark ? "dark" : "light"); }catch(e){}
+}
+applyTheme(currentTheme());
+if(themeBtn){
+  themeBtn.addEventListener("click", function(){ applyTheme(currentTheme() === "dark" ? "light" : "dark"); });
+}
+
+/* ---------------- Start ---------------- */
+wireStaticControls();
+render({enter:true});
+
+})();
+
+
+
+</script>
+</body>
+</html>
