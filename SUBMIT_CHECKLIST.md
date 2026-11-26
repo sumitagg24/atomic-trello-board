@@ -29,7 +29,7 @@ Already deployed from this folder with the Vercel CLI:
 
 ## 3. Record the Loom (under 5 min, facecam, your voice)
 
-Script is already written in `atomic-trello-board/LOOM_SCRIPT.md` (same folder as `index.html`):
+Script is already written in `LOOM_SCRIPT.md` (same folder as `index.html`):
 intro (0:00–0:30) → live demo incl. a drag and a reload (0:30–2:00) → board
 summary panel (2:00–3:30) → code walkthrough, all of it in the single
 `index.html` (3:30–4:30) → what you'd improve next (4:30–5:00). Record it the way

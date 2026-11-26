@@ -172,7 +172,7 @@ are gone, replaced by a white-first palette with a matching dark theme (see
 - Created a board from the Study plan template and duplicated it (no id
   collisions, 4 lists / 5 cards copied, new board active).
 - Exported a board (blob download `algorithms-study-copy.json`) and imported a
-  JSON board through the real file input: lists, due date, label, assignee and
+  JSON board through the real file input: lists, due date, labels, assignee and
   checklist all restored.
 - 390×844 viewport: no page-level horizontal overflow, lists scroll horizontally,
   the card modal fits (370×820 in 390×844) with visible actions and a scrolling
