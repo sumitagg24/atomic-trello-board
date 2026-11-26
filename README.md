@@ -87,8 +87,7 @@ Cards are focusable: `Tab` to a card and press `Enter` to open it. Dialogs trap
 
 ## Submit (all three, from mingwsumit@gmail.com)
 
-1. Public GitHub repo with `index.html` in it
-   (github.com/sumitagg24 → New repository → e.g. `atomic-trello-board` → Public)
+1. Public GitHub repo: **https://github.com/sumitagg24/atomic-trello-board**
 2. Live URL (deployed on Vercel, static, no build command):
    **https://atomic-trello-board.vercel.app** — redeploy with
    `vercel --prod` from this folder after a change.

@@ -9,16 +9,14 @@ land; on touch devices use the Board / List dropdowns. Fallback if drag ever
 misbehaves: open a card, change its List (or Board) dropdown in the editor,
 save — that moves it too.
 
-## 1. Push to GitHub (public repo, ~5 min, needs your sign-in)
+## 1. GitHub repo — done
 
-The whole app is one self-contained file in this project folder:
-`atomic-trello-board/index.html`
-(full path on this machine: `C:\Users\Sumit\projects\atomic assignment\atomic-trello-board\index.html`)
+Public repository: **https://github.com/sumitagg24/atomic-trello-board**
 
-Easiest path, no git needed:
-1. github.com/sumitagg24 → New repository → name it e.g. `atomic-trello-board` → Public → Create.
-2. Upload files → drag in `index.html` from `atomic-trello-board/` so it lands at the repo root → Commit.
-3. Repo URL will be `https://github.com/sumitagg24/atomic-trello-board`.
+The whole app is one self-contained file, committed at the repo root:
+`index.html` (the docs and screenshots sit alongside it).
+
+To ship a change: `cd atomic-trello-board && git add -A && git commit -m "..." && git push`
 
 ## 2. Vercel deploy — done
 
@@ -45,7 +43,7 @@ Paste: public GitHub repo link + live Vercel URL + Loom link.
 
 ## Checklist
 
-- [ ] GitHub repo public, `index.html` in it
+- [x] GitHub repo public, `index.html` in it (https://github.com/sumitagg24/atomic-trello-board)
 - [x] Vercel live URL opens logged-out (https://atomic-trello-board.vercel.app)
 - [x] One real drag tested on the live URL + reload persists
 - [ ] Loom recorded, under 5 min
