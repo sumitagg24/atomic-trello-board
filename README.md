@@ -76,6 +76,7 @@ Cards are focusable: `Tab` to a card and press `Enter` to open it. Dialogs trap
   **List** selectors in its editor to move it.
 - The summary panel is entirely local: counts, deadlines and the suggested next
   action are computed from the board in the browser. No API key, no network call.
+- On narrow screens (≤860px), the Board summary sits behind the **✦ Board summary** button; tap it to open.
 - “Reset demo data” in the toolbar restores the original sample boards.
 
 ## Files
