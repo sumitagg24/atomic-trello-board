@@ -11,10 +11,12 @@
 
 ## Pre-flight (do before you hit record)
 
+**Record at desktop width with the summary panel open** — below ~860px the ✦ Board summary panel auto-collapses, so a narrow window records the whole bonus feature as hidden.
+
 1. Open **https://atomic-trello-board.vercel.app** in Chrome. Use a ~1440×900 window, zoom 100%.
 2. Make sure the theme is **light**: if dark, click the sun/moon button at top right (next to “✦ Board summary”) until the page is white.
 3. Click **Reset demo data** (under the filter row, left side). In the dialog click **Delete**. Wait for the toast “Demo data restored”.
-4. Confirm the right-hand **✦ Board summary** panel is visible. If hidden, click **✦ Board summary** at top right.
+4. Confirm the right-hand **✦ Board summary** panel is visible. If it is collapsed, the window is too narrow (< ~860px): widen it, then click **✦ Board summary** at top right.
 5. Open VS Code with `atomic-trello-board/index.html`. Increase font size (`Ctrl` + `+`) so code is readable at 1080p. Close the terminal panel.
 6. Loom: screen + microphone + camera bubble, 1080p. Turn off notifications (Windows Focus assist / Do not disturb).
 7. Keep this teleprompter on a phone or second screen.
