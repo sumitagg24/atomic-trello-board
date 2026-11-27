@@ -1,55 +1,162 @@
-# Atomic Computing — build task (AI Software Engineering Internship)
+# Atomic Boards — Loom script (final teleprompter)
 
-## Status
-- Quiz PASSED. Mike Kasher mailed Mon 23 Nov 2026, 20:14 UTC / Tue 24 Nov 01:44 IST.
-- Build task: Trello-style project management tool.
-- **Due: within 7 days of the mail → ~Mon 30 Nov 2026. Aim to submit by Sun 29 Nov.**
-- **Ready:** app + public GitHub repo + live Vercel URL. Only the Loom and the form remain.
+**Live app:** https://atomic-trello-board.vercel.app  
+**Repo:** https://github.com/sumitagg24/atomic-trello-board  
+**Target length:** 4:55 (hard cap 5:00)  
+**Format:** screen + mic + camera bubble, 1080p, client-call tone
 
-## What to build (from Mike's mail, verbatim requirements)
-- Boards, lists, cards
-- Drag-and-drop cards between lists
-- Data saved (persisted — localStorage is fine for a prototype; say so in the video)
-- ONE bonus feature: **AI board summary** (recommended — fits his AI profile) OR role-based access (owner / member / viewer)
-- Deploy on a free host needing no credit card: Netlify, Vercel, GitHub Pages, Cloudflare Pages, Render or Replit. No paid cloud account needed.
-- AI coding tools are fine, as long as he can explain the code in the video.
+> Dry-run verification (2026-11-27, live Vercel URL): reset-demo flow, board switching, card editor/checklist save (3/3), native HTML5 drag-event move (Backlog → Doing, verified with synthetic dragstart/dragover/drop dispatch in browser; record with a real mouse drag), reload persistence, Overdue filter (2 overdue cards), summary panel numbers/action, cross-board drag to Marketing Site Refresh tab landing in Ideas, and code line refs (`var LS_KEY`, `function render(`, `Drag and drop (native`, `function buildSummaryData`) all confirmed on the live app. Reset demo data after the dry run.
 
-## Build as shipped (this is what is in `index.html`)
-- Stack: one self-contained static `index.html` — plain HTML, CSS and vanilla JavaScript, no framework, no build step, no npm install, no backend. It runs by opening the file or serving it from any static host. State in localStorage (seed with a realistic demo board: e.g. "Product Launch" with Backlog / Doing / Review / Done).
-- Drag-and-drop: native HTML5 drag events (dragstart / dragover / drop) — no dependency, precise insert order, cross-board by dropping on a board tab. Touch and keyboard users move a card with the Board / List selectors in its editor.
-- Board summary (the brief's "AI board summary" bonus, wrapped as a rules-based panel): client-side, no API key — per-board counts, overdue / due-soon cards, busiest list, suggested next action ("3 cards overdue, 2 unassigned — start with…"). It runs entirely in the browser with no network call, which keeps it demoable with zero paid account and honest in the video.
-- Pages/views: board switcher (3 boards), list add/rename, card add/edit (title, description, due date, labels, assignee, checklist), search/filter, archive, activity log, summary panel.
-- Polish bar (his quality rule): must be verified end-to-end before submitting — drag across lists, reload persistence, summary updates live.
+---
 
-## Submit (same email mingwsumit@gmail.com)
-- Public GitHub repo — **done:** https://github.com/sumitagg24/atomic-trello-board
-- Live URL — **done:** https://atomic-trello-board.vercel.app
-- Loom video, max 5 minutes, "record it the way you would show up to a client call"
-- Form: https://docs.google.com/forms/d/e/1FAIpQLScSbfBDyyFUZGdntU5GQlKPZlbnErsA8jRfV-cdpzTk8vAb0A/viewform
+## Pre-flight (do before you hit record)
 
-## Loom script (5 min, client-call style) — draft for him to record
+1. Open **https://atomic-trello-board.vercel.app** in Chrome. Use a ~1440×900 window, zoom 100%.
+2. Make sure the theme is **light**: if dark, click the sun/moon button at top right (next to “✦ Board summary”) until the page is white.
+3. Click **Reset demo data** (under the filter row, left side). In the dialog click **Delete**. Wait for the toast “Demo data restored”.
+4. Confirm the right-hand **✦ Board summary** panel is visible. If hidden, click **✦ Board summary** at top right.
+5. Open VS Code with `atomic-trello-board/index.html`. Increase font size (`Ctrl` + `+`) so code is readable at 1080p. Close the terminal panel.
+6. Loom: screen + microphone + camera bubble, 1080p. Turn off notifications (Windows Focus assist / Do not disturb).
+7. Keep this teleprompter on a phone or second screen.
+8. Optional 10-second test recording, then delete it.
 
-Before recording: open **https://atomic-trello-board.vercel.app**, click **Reset demo data** so the board starts clean, and close the console.
+**On-screen state when you start:** Product Launch board, light theme, summary panel open, all filters cleared, no dialogs.
 
-1. (0:00–0:30) Intro: who he is, what the app is — a Trello-style board manager with drag-and-drop, saved data and a client-side board summary. Keep the live URL visible in the address bar and say it is deployed on Vercel.
-2. (0:30–2:00) Demo: open a board, add a card, then open it and set a due date, two labels, an assignee and one checklist item. Save, drag the card between lists (point at the drop line), then drag a card onto another board's tab to show cross-board moves. Delete a card and hit Undo, or run a quick label/overdue filter if time allows. Reload the page to show the card, order and labels persisted.
-3. (2:00–3:30) Board summary (the bonus feature): show the panel on a board with overdue/unassigned cards — totals, completion, overdue, due soon, unassigned, cards per list, busiest list and the suggested next action. Explain that it is computed client-side from the live board with no paid service or API key, and call it a rules-based board summary, not AI — there is no model behind it.
-4. (3:30–4:30) Code walkthrough: state shape (boards → lists → cards), `save()` / `load()` with `localStorage`, `render()`, the native drag handlers (`dragstart` / `dragover` / `drop` and `moveCardWithin` / `moveCardToBoard`), and `buildSummaryData()`. All inline in the single `index.html`.
-5. (4:30–5:00) What he'd improve next: backend sync + real accounts and role-based access, LLM-backed summaries with a key, and splitting the single file with tests.
+---
 
-### Brief coverage checklist (tick while recording)
+## 5-minute teleprompter
 
-- [ ] Live deployed URL visible (0:00–0:30)
-- [ ] Boards, lists and cards shown, with a card created/edited (0:30–2:00)
-- [ ] Drag between lists with a clear drop indicator (0:30–2:00)
-- [ ] Data saved — reload proves it persisted (0:30–2:00)
-- [ ] Bonus: live board summary explained (2:00–3:30)
-- [ ] Code explained — state, storage, drag, summary (3:30–4:30)
-- [ ] Total runtime under 5 minutes
+Read the quoted lines. Do the bracketed action at the same time. Pause one beat after each click.
 
-## Only he can do
-- Record the Loom (facecam, your voice, client-call manner). No tool can record it for you.
-- Submit the form with the repo, live URL and Loom link.
+### 0:00–0:15 — Intro
 
-## Source
-- Mike Kasher mail, 23 Nov 2026 20:14 UTC, mingwsumit@gmail.com inbox, subject "Atomic Computing internship: your build task".
+*Screen: live app, address bar visible.*
+
+> “Hi, I’m Sumit. This is Atomic Boards — a Trello-style board manager I built for the Atomic Computing build task. It’s live on Vercel at atomic-trello-board.vercel.app, and it’s a single static HTML file with no backend.”
+
+### 0:15–0:30 — Boards
+
+*Click the **Engineering Sprint** tab. Pause 1 second. Click **Product Launch**.*
+
+> “It has boards, lists and cards, saved in the browser. Here are three seeded boards, and switching between them is instant.”
+
+### 0:30–0:55 — Card editor + checklist
+
+*In the **Doing** list, click the card titled **“Landing page hero + screenshots”**.*
+
+> “Cards open in an editor with a description, due date, labels, an assignee and a checklist. This one is at two of three.”
+
+*In the editor, click the last checklist checkbox, **“Check the mobile crop”**. Point at the “3/3” progress. Click **Save changes**.*
+
+> “I’ll tick the last item — the card face now shows three of three.”
+
+### 0:55–1:15 — Drag between lists
+
+*Drag **“Competitor pricing teardown”** from **Backlog** into **Doing**, above the first card. Show the drop line before releasing.*
+
+> “Dragging uses native HTML5 events. The line shows exactly where the card will land, and the move is saved immediately.”
+
+### 1:15–1:25 — Reload persistence
+
+*Press **Ctrl+R**. Wait for the page. Point at “Competitor pricing teardown” now in Doing.*
+
+> “Reload — it’s still there, because every change writes to localStorage.”
+
+### 1:25–1:40 — Filters
+
+*Click the **Overdue** chip. Point at the two red cards. Click **All cards**.*
+
+> “Filters cover overdue, due soon and labels. Two cards are overdue, and the board marks them in red.”
+
+### 1:40–2:40 — Bonus summary
+
+*Point at the right-hand panel, top to bottom as you speak.*
+
+> “The bonus feature is this board summary. It updates live: total cards, completion, overdue, due in the next two days, unassigned, and cards per list. It also finds the busiest list, lists what needs attention, and suggests one next action — here it points at the most overdue card. All of it is computed in the browser from the board data, with no API key and no paid service.”
+
+### 2:40–3:00 — Cross-board drag
+
+*Drag **“Beta feedback synthesis”** from Backlog onto the **Marketing Site Refresh** tab. Release when the tab highlights.*
+
+> “Dropping on another board’s tab moves the card across boards. It lands in Marketing’s Ideas list, and both activity logs record the move.”
+
+*Click the **Marketing Site Refresh** tab. Point at the card in Ideas.*
+
+> “There it is, in the other board.”
+
+### 3:00–3:10 — Back to the main board
+
+*Click **Product Launch**.*
+
+> “Back on Product Launch — now the code.”
+
+### 3:10–4:15 — Code walkthrough (VS Code)
+
+*Alt+Tab to VS Code, with `index.html` open.*
+
+> “Everything is in one index.html. The state is boards, lists and cards, with a version and the active board id.”
+
+*Ctrl+F, type `var LS_KEY`, press Esc. Point at the storage lines.*
+
+> “Data lives under one localStorage key, and save and load are right here.”
+
+*Ctrl+F, type `function render(`, press Esc. Point at the function.*
+
+> “Every change goes through render, which rebuilds the view and then saves.”
+
+*Ctrl+F, type `Drag and drop (native`, press Esc. Point at the drag section.*
+
+> “The drag handlers are native dragstart, dragover and drop, with two functions doing the data move — one inside a board, one across boards.”
+
+*Ctrl+F, type `function buildSummaryData`, press Esc. Point at the function.*
+
+> “The summary is plain rules over the same data — overdue, due soon, unassigned, busiest list and the next action. No model, no API call.”
+
+### 4:15–4:40 — What you would improve
+
+*Alt+Tab back to the app.*
+
+> “Next I’d add a backend with real accounts and role-based access, so boards sync across devices. I’d also add an LLM-backed summary with a proper key, and split the single file into modules with tests.”
+
+### 4:40–4:55 — Close
+
+*Point at the address bar.*
+
+> “The repo and live URL are in the submission form. Thanks for watching.”
+
+*Stop the recording.*
+
+---
+
+## If something goes wrong (say the line, keep moving)
+
+| Problem | Fix | Line to say |
+| --- | --- | --- |
+| Drag doesn’t pick up | Click the card → change **List** in the editor → **Save changes** | “There’s also an editor fallback for moving cards — I’ll use that.” |
+| Drop lands in the wrong spot | Drag it again, or say it moved and continue | “Close enough — the drop line shows the exact insertion point.” |
+| Summary panel is hidden | Click **✦ Board summary** at the top right | “The summary panel is collapsible.” |
+| Wrong theme on screen | Do not fix on camera; keep going | Nothing — finish and re-record only if it looks bad |
+| You run past 4:50 | Skip the filters (1:25–1:40) or shorten the improvement list | — |
+| VS Code opens the wrong tab | `Ctrl+P`, type `index.html`, Enter | — |
+
+**Hard rule:** stop by 4:55 even if you skip a section. A clean 4:30 beats a rushed 5:30.
+
+---
+
+## After recording
+
+1. In Loom, trim the first/last second if needed. Title it **“Atomic Boards — Atomic Computing build task”**.
+2. Set visibility to **Anyone with the link**.
+3. Copy the **share** URL (`https://www.loom.com/share/...`).
+4. Fill the submission form (email `mingwsumit@gmail.com`, full name, repo, live URL, Loom, bonus **AI board summary**, host **Vercel**, AI tools, anything else).
+5. Submit, then screenshot the confirmation.
+6. Keep the repo and live URL unchanged until the reviewer opens them.
+
+## Final checklist
+
+- [ ] Loom under 5:00 and plays logged-out
+- [ ] Form email = application email
+- [ ] Full name complete
+- [ ] Repo + live + Loom links pasted
+- [ ] AI board summary + Vercel selected
+- [ ] Confirmation screenshot saved
