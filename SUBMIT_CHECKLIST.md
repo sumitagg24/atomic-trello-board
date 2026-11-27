@@ -46,5 +46,5 @@ Paste: public GitHub repo link + live Vercel URL + Loom link.
 - [x] GitHub repo public, `index.html` in it (https://github.com/sumitagg24/atomic-trello-board)
 - [x] Vercel live URL opens logged-out (https://atomic-trello-board.vercel.app)
 - [x] One real drag tested on the live URL + reload persists
-- [ ] Loom recorded, under 5 min, at desktop width with the ✦ Board summary panel open (it auto-collapses below ~860px)
+- [ ] Loom recorded, under 5 min, at desktop width with the ✦ Board summary panel open (it auto-hides at 860px or narrower; Chrome at ~1440×900, zoom 100%)
 - [ ] Form submitted by Sun 29 Nov (hard deadline Mon 30 Nov)

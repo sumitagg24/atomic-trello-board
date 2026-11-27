@@ -11,16 +11,24 @@
 
 ## Pre-flight (do before you hit record)
 
-**Record at desktop width with the summary panel open** — below ~860px the ✦ Board summary panel auto-collapses, so a narrow window records the whole bonus feature as hidden.
+**Record at desktop width with the summary panel open** — the panel hides itself whenever the viewport is **860px or narrower** (`index.html:2607`: `innerWidth <= 860`), so keep Chrome at ~1440×900 with zoom at 100% or the whole bonus feature records as hidden.
 
 1. Open **https://atomic-trello-board.vercel.app** in Chrome. Use a ~1440×900 window, zoom 100%.
 2. Make sure the theme is **light**: if dark, click the sun/moon button at top right (next to “✦ Board summary”) until the page is white.
 3. Click **Reset demo data** (under the filter row, left side). In the dialog click **Delete**. Wait for the toast “Demo data restored”.
-4. Confirm the right-hand **✦ Board summary** panel is visible. If it is collapsed, the window is too narrow (< ~860px): widen it, then click **✦ Board summary** at top right.
+4. Confirm the right-hand **✦ Board summary** panel is visible. If it is collapsed the window is 860px or narrower: widen the window, then click **✦ Board summary** at top right — that click pins the panel open for the rest of the session, so a later resize cannot re-hide it.
 5. Open VS Code with `atomic-trello-board/index.html`. Increase font size (`Ctrl` + `+`) so code is readable at 1080p. Close the terminal panel.
 6. Loom: screen + microphone + camera bubble, 1080p. Turn off notifications (Windows Focus assist / Do not disturb).
 7. Keep this teleprompter on a phone or second screen.
 8. Optional 10-second test recording, then delete it.
+
+**Other things that hide themselves:**
+
+- Browser zoom counts as width: `Ctrl` + `+` in Chrome shrinks the CSS viewport and can re-collapse the panel. Zoom VS Code, not the browser.
+- At 860px or narrower, clicking **✦ Board summary** looks like it does nothing — the panel opens *below* the board, off-screen. Widen the window instead of clicking.
+- Card **⋯** buttons are invisible until you hover the card (`index.html:334`–`337`): park the cursor on the card before you mention the card menu.
+- Toasts clear themselves — “Demo data restored” after 2.4s, undo toasts after 5s (`toast()` in `index.html`). Say the reset line promptly.
+- At 860px or narrower the four lists become one horizontally scrolling row, and at 520px or narrower the toolbar buttons drop their labels for icons (`index.html:757`).
 
 **On-screen state when you start:** Product Launch board, light theme, summary panel open, all filters cleared, no dialogs.
 
