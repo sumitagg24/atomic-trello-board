@@ -11,9 +11,9 @@
 
 ## Pre-flight (do before you hit record)
 
-**Record at desktop width with the summary panel open** — the panel hides itself whenever the viewport is **860px or narrower** (`index.html:2607`: `innerWidth <= 860`), so keep Chrome at ~1440×900 with zoom at 100% or the whole bonus feature records as hidden.
+**Record at desktop width with the summary panel open** — the panel hides itself whenever the viewport is **860px or narrower** (`index.html:2607`: `innerWidth <= 860`), and zooming *in* re-hides it. Keep zoom at 100% and **maximize the window instead of using 1440×900**: the open panel takes 336px (`index.html:402`), so a 1440 window leaves the board 1104px and cuts ~108px — a third — off the **Done** column. Maximized (1536 on this screen) that overhang drops to 12px; at 1600px wide it clears entirely.
 
-1. Open **https://atomic-trello-board.vercel.app** in Chrome. Use a ~1440×900 window, zoom 100%.
+1. Open **https://atomic-trello-board.vercel.app** in Chrome. **Maximize** the window (not 1440×900) at 100% zoom — at 1440 the **Done** column is clipped and you would be dragging while horizontal-scrolling.
 2. Make sure the theme is **light**: if dark, click the sun/moon button at top right (next to “✦ Board summary”) until the page is white.
 3. Click **Reset demo data** (under the filter row, left side). In the dialog click **Delete**. Wait for the toast “Demo data restored”.
 4. Confirm the right-hand **✦ Board summary** panel is visible. If it is collapsed the window is 860px or narrower: widen the window, then click **✦ Board summary** at top right — that click pins the panel open for the rest of the session, so a later resize cannot re-hide it.
@@ -29,6 +29,7 @@
 - Card **⋯** buttons are invisible until you hover the card (`index.html:334`–`337`): park the cursor on the card before you mention the card menu.
 - Toasts clear themselves — “Demo data restored” after 2.4s, undo toasts after 5s (`toast()` in `index.html`). Say the reset line promptly.
 - At 860px or narrower the four lists become one horizontally scrolling row, and at 520px or narrower the toolbar buttons drop their labels for icons (`index.html:757`).
+- The summary panel is ~1050px of content, so it scrolls inside itself in any window shorter than ~1110px. At 900px tall about 210px is below its fold, hiding three of the five **needs attention** rows (`DUE SOON` ×2 and `NO OWNER`). Before recording, check **NO OWNER — Draft launch FAQ for support** sits above the bottom edge; if not, scroll the panel down ~200px when you reach the attention rows.
 
 **On-screen state when you start:** Product Launch board, light theme, summary panel open, all filters cleared, no dialogs.
 
